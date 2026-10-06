@@ -48,6 +48,20 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 
 ---
 
+## 🐳 Despliegue en VPS (Hostinger con Docker)
+
+El repositorio incluye compilación automatizada y publicación continua en GitHub Container Registry (`ghcr.io`).
+
+Para desplegar en tu VPS con Docker Compose:
+```bash
+curl -sO https://raw.githubusercontent.com/grupoSIM/calles-posadas/main/docker-compose.yml
+docker compose pull
+docker compose up -d
+```
+Consultá la [Guía completa de Despliegue](docs/deployment.md) para configuración de dominios, proxy inverso Nginx y certificados SSL gratuitos con Certbot.
+
+---
+
 ## 🧪 Pruebas y Validación Empírica
 
 ```bash

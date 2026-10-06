@@ -1,0 +1,7 @@
+node_modules
+.next
+.git
+.github
+*.log
+.DS_Store
+Thumbs.db

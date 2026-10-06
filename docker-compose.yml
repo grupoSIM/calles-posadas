@@ -1,0 +1,15 @@
+services:
+  calles-posadas:
+    image: ghcr.io/gruposim/calles-posadas:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: calles-posadas
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      - ./data:/app/data
