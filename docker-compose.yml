@@ -6,10 +6,23 @@ services:
       dockerfile: Dockerfile
     container_name: calles-posadas
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
     volumes:
       - ./data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.calles-posadas.rule=Host(`posadas.ferchamorro.cloud`)"
+      - "traefik.http.routers.calles-posadas.entrypoints=websecure"
+      - "traefik.http.routers.calles-posadas.tls=true"
+      - "traefik.http.routers.calles-posadas.tls.certresolver=letsencrypt"
+      - "traefik.http.services.calles-posadas.loadbalancer.server.port=3000"
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true

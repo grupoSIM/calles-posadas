@@ -58,7 +58,7 @@ curl -sO https://raw.githubusercontent.com/grupoSIM/calles-posadas/main/docker-c
 docker compose pull
 docker compose up -d
 ```
-Consultá la [Guía completa de Despliegue](docs/deployment.md) para configuración de dominios, proxy inverso Nginx y certificados SSL gratuitos con Certbot.
+Consultá la [Guía completa de Despliegue](docs/deployment.md) para configuración con Traefik (`posadas.ferchamorro.cloud`) o Nginx y certificados SSL automáticos.
 
 ---
 
