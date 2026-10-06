@@ -1,9 +1,8 @@
+name: calles-posadas
+
 services:
   calles-posadas:
     image: ghcr.io/gruposim/calles-posadas:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: calles-posadas
     restart: unless-stopped
     expose:
@@ -11,15 +10,16 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.calles-posadas.rule=Host(`posadas.ferchamorro.cloud`)"
-      - "traefik.http.routers.calles-posadas.entrypoints=websecure"
-      - "traefik.http.routers.calles-posadas.tls=true"
-      - "traefik.http.routers.calles-posadas.tls.certresolver=letsencrypt"
-      - "traefik.http.services.calles-posadas.loadbalancer.server.port=3000"
     networks:
       - pigar-staging_edge
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=pigar-staging_edge"
+      - "traefik.http.routers.calles-posadas-secure.rule=Host(`posadas.ferchamorro.cloud`)"
+      - "traefik.http.routers.calles-posadas-secure.entrypoints=websecure"
+      - "traefik.http.routers.calles-posadas-secure.tls=true"
+      - "traefik.http.routers.calles-posadas-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.services.calles-posadas.loadbalancer.server.port=3000"
 
 networks:
   pigar-staging_edge:
