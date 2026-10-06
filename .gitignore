@@ -7,7 +7,6 @@ node_modules/
 Thumbs.db
 *.log
 .harness-test-*/
-data/raw/
 data/*.db
 data/*.db-journal
 data/*.db-wal
