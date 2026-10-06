@@ -54,6 +54,15 @@ export default function RootLayout({
                 Métricas
               </a>
               <a
+                href="https://ide.posadas.gob.ar/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1 text-xs bg-slate-800/90 hover:bg-posadas-river hover:text-white text-slate-200 px-3 py-1.5 rounded-md transition-all border border-slate-700/80 hover:border-posadas-river shadow-sm"
+              >
+                <span>IDE Posadas</span>
+                <span className="text-[10px] opacity-75">↗</span>
+              </a>
+              <a
                 href="https://digesto.hcdposadas.gob.ar/"
                 target="_blank"
                 rel="noopener noreferrer"
