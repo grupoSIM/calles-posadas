@@ -21,8 +21,8 @@ services:
       - "traefik.http.routers.calles-posadas.tls.certresolver=letsencrypt"
       - "traefik.http.services.calles-posadas.loadbalancer.server.port=3000"
     networks:
-      - traefik-public
+      - pigar-staging_edge
 
 networks:
-  traefik-public:
+  pigar-staging_edge:
     external: true
