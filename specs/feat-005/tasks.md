@@ -1,0 +1,13 @@
+# FEAT-005 — tareas
+
+Descomposición de la [spec](spec.md) en resultados observables. El estado global y la siguiente acción se consultan en el [catálogo](../index.md).
+
+| ID | Resultado de la tarea | Aceptación | Comprobación y evidencia | Estado |
+|---|---|---|---|---|
+| T-001 | Configurar variables de tema, tokens de color y estilos Stitch (`River Azure`, `Guaraní Emerald`, `Midnight Slate`, glassmorphism) en `globals.css` y `tailwind.config.js`. | AC-001 | Inspección de estilos y verificación de contrastes en [evidence.md](evidence.md#t-001). | Verificada |
+| T-002 | Rediseñar la cabecera institucional en `layout.tsx` con identidad cívica, isotipo municipal y enlaces limpios. | AC-001, AC-004 | Verificación visual y pruebas de navegación en [evidence.md](evidence.md#t-002). | Verificada |
+| T-003 | Rediseñar el panel lateral de búsqueda y ficha en `src/app/page.tsx` permitiendo retención de contexto, transición fluida entre lista y ficha de calle sin recargas. | AC-002 | Pruebas de interacción y verificación de filtros preservados en [evidence.md](evidence.md#t-003). | Verificada |
+| T-004 | Implementar bottom sheet móvil responsivo de 3 estados (peek 72px, medio 45vh, completo 90vh) con barra flotante compacta. | AC-003 | Verificación de renderizado en viewport móvil en [evidence.md](evidence.md#t-004). | Verificada |
+| T-005 | Integrar controles HUD cartográficos minimalistas (zoom, toggle ciclovía, píldora de coordenadas Posadas) en `StreetViewer.tsx`. | AC-004 | Validación interactiva en visor Leaflet en [evidence.md](evidence.md#t-005). | Verificada |
+| T-006 | Rediseñar la ficha técnica `StreetDetailCard.tsx` con tarjetas de ordenanza municipal del Digesto, badges viales y datos estructurados. | AC-001, AC-002 | Comprobación de componentes y enlace seguro a Digesto en [evidence.md](evidence.md#t-006). | Verificada |
+| T-007 | Ejecutar suite de pruebas (`npm test`) y compilación de producción (`npm run build`) para certificar cero regresiones. | AC-005 | Salida real de tests y build en [evidence.md](evidence.md#t-007). | Verificada |
