@@ -88,5 +88,13 @@ describe('FEAT-003: Integración Frontend y Visor Cartográfico', () => {
       const StreetViewer = (await import('../src/components/map/StreetViewer')).default;
       assert.equal(typeof StreetViewer, 'function');
     });
+
+    test('Vista de enlace permanente /calles/[slug] resuelve arteria y renderiza con traza GeoJSON', async () => {
+      const StreetDetailPage = (await import('../src/app/calles/[slug]/page')).default;
+      assert.equal(typeof StreetDetailPage, 'function');
+
+      const pageElement = await StreetDetailPage({ params: Promise.resolve({ slug: 'avenida-juan-maza-140' }) });
+      assert.ok(pageElement);
+    });
   });
 });

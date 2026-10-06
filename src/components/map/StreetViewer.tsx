@@ -33,6 +33,7 @@ export default function StreetViewer({
 }: StreetViewerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
+  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
   const geojsonLayerRef = useRef<LeafletGeoJSON | null>(null);
   const [highlightCycleways, setHighlightCycleways] = useState(true);
 
@@ -62,11 +63,20 @@ export default function StreetViewer({
       }).addTo(map);
 
       mapInstanceRef.current = map;
+      if (isMounted) {
+        setMapInstance(map);
+      }
 
       // InvalidateSize para garantizar que Leaflet ocupe el 100% del viewport
       const timer1 = setTimeout(() => {
         if (isMounted && mapInstanceRef.current) {
           mapInstanceRef.current.invalidateSize();
+          if (geojsonLayerRef.current) {
+            const bounds = geojsonLayerRef.current.getBounds();
+            if (bounds.isValid()) {
+              mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 16, animate: false });
+            }
+          }
         }
       }, 100);
 
@@ -96,15 +106,20 @@ export default function StreetViewer({
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      setMapInstance(null);
     };
   }, []);
 
   // Actualización de capa GeoJSON y ajuste de encuadre (fitBounds)
   useEffect(() => {
+    let isCancelled = false;
+
     async function updateGeoJson() {
-      if (!mapInstanceRef.current) return;
+      if (!mapInstance) return;
       const L = await import('leaflet');
-      const map = mapInstanceRef.current;
+      if (isCancelled) return;
+
+      const map = mapInstance;
 
       // Limpiar capa previa
       if (geojsonLayerRef.current) {
@@ -147,6 +162,7 @@ export default function StreetViewer({
       geojsonLayerRef.current = layer;
 
       // Ajuste automático de encuadre (fitBounds)
+      map.invalidateSize();
       const bounds = layer.getBounds();
       if (bounds.isValid()) {
         map.fitBounds(bounds, {
@@ -158,28 +174,33 @@ export default function StreetViewer({
     }
 
     updateGeoJson();
-  }, [geojson, activeStreetName, hasCycleway, cyclewayType, tramos, highlightCycleways]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [mapInstance, geojson, activeStreetName, hasCycleway, cyclewayType, tramos, highlightCycleways]);
 
   // Controles HUD de navegación
   const handleZoomIn = useCallback(() => {
-    mapInstanceRef.current?.zoomIn();
-  }, []);
+    (mapInstance || mapInstanceRef.current)?.zoomIn();
+  }, [mapInstance]);
 
   const handleZoomOut = useCallback(() => {
-    mapInstanceRef.current?.zoomOut();
-  }, []);
+    (mapInstance || mapInstanceRef.current)?.zoomOut();
+  }, [mapInstance]);
 
   const handleRecenter = useCallback(() => {
-    if (!mapInstanceRef.current) return;
+    const map = mapInstance || mapInstanceRef.current;
+    if (!map) return;
     if (geojsonLayerRef.current) {
       const bounds = geojsonLayerRef.current.getBounds();
       if (bounds.isValid()) {
-        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
         return;
       }
     }
-    mapInstanceRef.current.setView(POSADAS_CENTER, DEFAULT_ZOOM);
-  }, []);
+    map.setView(POSADAS_CENTER, DEFAULT_ZOOM);
+  }, [mapInstance]);
 
   return (
     <div className={`relative ${className} w-full h-full overflow-hidden`}>
