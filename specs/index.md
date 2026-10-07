@@ -11,19 +11,25 @@ Catálogo de incrementos de producto derivados del [PRD](../docs/prd.md) para el
 | FEAT-005 | Rediseño visual responsivo del visor y optimización espacial con Stitch | Media | FEAT-003 | [spec.md](feat-005/spec.md) | Verificada |
 | FEAT-006 | Saneamiento toponímico, desduplicación y consolidación de tramos en ETL | Alta | FEAT-001 | [spec.md](feat-006/spec.md) | Verificada |
 | FEAT-007 | Consolidación toponímica de variantes y abreviaturas viales por homonimia física | Media | FEAT-006 | [spec.md](feat-007/spec.md) | Verificada |
+| FEAT-008 | Capa interactiva de barrios en visor y enriquecimiento vial desde IDE Posadas | Alta | FEAT-007 | [spec.md](feat-008/spec.md) | Verificada |
+| FEAT-009 | Vinculación normativa del Digesto Jurídico Municipal y memoria toponímica de calles | Alta | FEAT-008 | [spec.md](feat-009/spec.md) | Verificada |
 
 ## Trabajo activo y siguiente acción
 
-- **Última feature completada:** `FEAT-007` (Consolidación toponímica de variantes y abreviaturas viales por homonimia física).
-- **Feature activa:** Ninguna.
-- **Responsable:** Leader / Analyst.
+- **Feature actual:** Ninguna (FEAT-001 a FEAT-009 verificadas con dictamen independiente favorable; errores ERR-001 y ERR-002 subsanados y verificados).
+- **Estado:** Catálogo al día (tramo MVP e incrementos FEAT-008 y FEAT-009 completamente verificados).
+- **Responsable:** Leader.
 - **Bloqueo:** Ninguno.
-- **Siguiente acción:** Proponer siguiente feature del roadmap o esperar nuevas directivas de producto.
+- **Siguiente acción:** Acordar el siguiente incremento del roadmap con el usuario tras la sincronización remota.
 
 ## Publicación
 
-Autorizada por el usuario el 2026-10-07 para sincronización y push al repositorio remoto principal (`origin/main`). Despliegue en producción o entornos VPS sujeto a confirmación independiente.
+Autorizada por el usuario el 2026-10-07 para sincronización, commit y push al repositorio remoto principal (`origin/main`). Despliegue en producción o entornos VPS sujeto a confirmación independiente.
 
 ## Aplicación del harness actualizado
 
-Aplicar [la guía SDD liviana piloto 2](../.harness/README.md) y [sus responsabilidades](../.harness/roles.md). FEAT-006 conserva su aprobación y tareas pendientes: esta actualización no la implementa ni reabre su contrato. No recalifica las entregas históricas ni supone que sus hallazgos ya se corrigieron. Toda feature nueva entra como Propuesta (proposed) y pasa por discovery y aprobación del contrato antes del código. El cierre exige aceptación comprobada, evidencia visual cuando aplica y revisión independiente.
+Aplicar [la guía SDD liviana piloto 2](../.harness/README.md) y [sus responsabilidades](../.harness/roles.md). Toda feature nueva entra como Propuesta (proposed) y pasa por discovery y aprobación del contrato antes del código. El cierre exige aceptación comprobada, evidencia visual cuando aplica y revisión independiente.
+
+## Notas históricas de transición (archivadas)
+
+- *2026-10-06 (Transición Piloto 2):* Al incorporar la guía del piloto 2, FEAT-006 conservaba su aprobación previa y tareas pendientes de verificación; dicha nota histórica no reabrió su contrato ni afectó su posterior verificación formal y cierre el 2026-10-07.

@@ -40,7 +40,7 @@ Plataforma cívica e interactiva para catalogar, buscar y consultar la memoria u
 - Node.js >= 20.x (detectado localmente: v22.14.0 / npm 10.9.2).
 - Conectividad a IDE Posadas (`https://www.ide.posadas.gob.ar/`).
 
-### Comandos de inicio (a configurar en FEAT-001/002)
+### Comandos de inicio
 - Instalación de dependencias: `npm install`
 - Ejecución de ingesta: `npm run etl`
 - Ejecución en desarrollo: `npm run dev`
@@ -49,6 +49,7 @@ Plataforma cívica e interactiva para catalogar, buscar y consultar la memoria u
 
 - Pruebas unitarias y de integración: `npm test`
 - Verificación de consistencia de datos: `npm run test:data`
+- Compilación de producción: `npm run build`
 - Evidencia histórica por feature: consultable en `specs/<id>/evidence.md`.
 
 ## Operación y límites

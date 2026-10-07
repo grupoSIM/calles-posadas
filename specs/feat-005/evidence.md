@@ -46,3 +46,53 @@ Historia de cambios, ejecuciones y comprobaciones de `FEAT-005`. El estado vigen
 - **Resultado del build:** Compilación exitosa en Next.js con Turbopack (todas las rutas `/`, `/calles/[slug]`, `/stats`, `/api/v1/*` generadas sin errores).
 - **Ajuste visual (Viewport & Leaflet):** Se eliminó la restricción residual de `min-h-[400px]` en el contenedor del visor Leaflet, pasando a `absolute inset-0` e invalidación dinámica de tamaño (`map.invalidateSize()`) para cubrir el 100% de la altura de pantalla sin espacios en blanco.
 
+## Errores y correcciones: reporte de producto (2026-10-07)
+
+### ERR-002: Resalte incorrecto de ciclovía en calles con tramos diferentes (Avenida Vivanco)
+- **Origen y fecha:** Reporte de usuario (2026-10-07).
+- **AC afectado:** AC-004 (Controles HUD flotantes y resalte diferencial de ciclovías).
+- **Síntoma y reproducción:** Avenida Vivanco (N° 139) tiene dos tramos catastrales: Tramo 1 (4111 m) con ciclovía y Tramo 2 (360 m) sin ella. Al activar el resalte de ciclovías en el visor Leaflet, el mapa pintaba ambos tramos de verde (`#10b981`), a pesar de que el tramo norte no posee ciclovía.
+- **Esperado:**
+  1. Con el resalte activo, cada tramo representa su propio atributo: verde (`#10b981`) con ciclovía y azul (`#0284c7`) sin ella.
+  2. Desactivar el resalte conserva todas las geometrías y muestra la traza normal (ambos tramos en azul `#0284c7`).
+  3. La representación visual coincide estrictamente con los datos de la ficha y la API.
+- **Observado:** La capa GeoJSON de `StreetViewer` evaluaba `hasCycleway` a nivel global de la arteria sobre una geometría unificada `MultiLineString`, por lo que el estilo aplicaba el color verde a toda la traza indistintamente.
+- **Cambio correctivo:**
+  - En `src/lib/db/streets.ts`: se incluyó la columna `t.geojson` en la consulta de tramos en `getStreetBySlug`, parseando la geometría individual de cada segmento.
+  - En `src/components/map/StreetViewer.tsx`: se adaptó `updateGeoJson` para estructurar un `FeatureCollection` normalizado con propiedades independientes por tramo (`orden`, `tiene_ciclovia`, `longitud_m`). La función `style(feature)` extrae el atributo booleano `tiene_ciclovia` de cada feature. Si el resalte está activo (`highlightCycleways === true`), únicamente los tramos con `tiene_ciclovia === true` adoptan Guaraní Emerald (`#10b981`), mientras que los tramos sin ciclovía se pintan en River Azure (`#0284c7`). Al desactivar el resalte (`highlightCycleways === false`), todos los tramos se presentan en River Azure (`#0284c7`), conservando íntegras todas las geometrías y el encuadre `fitBounds`.
+  - Se enriqueció el popup interactivo para indicar el número de tramo y el estado de ciclovía específico del tramo pulsado.
+- **Comprobación posterior:**
+  - Test unitario/integración en `test/frontend-integration.test.ts` verificando que Avenida Vivanco contiene tramos mixtos con geometrías y atributos de ciclovía diferenciados.
+  - Comprobación visual en la interfaz real de Next.js (`http://localhost:3000/calles/avenida-arq-jorge-eduardo-vivanco-139`) en viewport desktop (1280x800).
+  - Capturas reales guardadas en `specs/feat-005/artifacts/`:
+    - [ERR-002-vivanco-ciclovia-resalte-activo.png](artifacts/ERR-002-vivanco-ciclovia-resalte-activo.png): Viewport desktop 1280x800. Escenario con botón HUD de ciclovías activo (verde). Tramo 1 (4111 m) pintado en verde (#10b981) y Tramo 2 (360 m) pintado en azul (#0284c7). Coincide exactamente con la lista de tramos catastrales de la ficha.
+    - [ERR-002-vivanco-ciclovia-resalte-inactivo.png](artifacts/ERR-002-vivanco-ciclovia-resalte-inactivo.png): Viewport desktop 1280x800. Escenario con botón HUD de ciclovías desactivado (blanco). Ambos tramos se pintan en azul (#0284c7), preservando todas las geometrías de la traza oficial.
+
+### <a id="t-008"></a>T-008: Resalte cartográfico y estilización diferencial por tramo (Developer)
+- **Fecha y rol:** 2026-10-07, Developer (Autocontrol).
+- **Archivos modificados:** `src/lib/db/streets.ts`, `src/components/map/StreetViewer.tsx`, `test/frontend-integration.test.ts`.
+- **Comandos de comprobación:** `npm test` y validación visual automatizada mediante navegador headless sobre la interfaz real.
+- **Exit code:** 0 (41 tests pasados en 19 suites, 0 fallos).
+- **Artefactos visuales generados:**
+  - [ERR-002-vivanco-ciclovia-resalte-activo.png](artifacts/ERR-002-vivanco-ciclovia-resalte-activo.png)
+  - [ERR-002-vivanco-ciclovia-resalte-inactivo.png](artifacts/ERR-002-vivanco-ciclovia-resalte-inactivo.png)
+- **Estado AC-004:** Cumplido con evidencia empírica.
+
+### <a id="revisión-independiente-err-002"></a>Revisión independiente de ERR-002
+- **Fecha y rol:** 2026-10-07, Verifier independiente (`42e38864-ff41-4539-b74a-00783a5a3cc6`).
+- **Material inspeccionado:**
+  - Contrato en `specs/feat-005/spec.md` (AC-004 y AC-005).
+  - Diff en `src/components/map/StreetViewer.tsx` y `src/lib/db/streets.ts` (manejo de GeoJSON individual por tramo, FeatureCollection y estilización diferencial según `tiene_ciclovia`).
+  - Artefactos visuales reales:
+    - [ERR-002-vivanco-ciclovia-resalte-activo.png](artifacts/ERR-002-vivanco-ciclovia-resalte-activo.png)
+    - [ERR-002-vivanco-ciclovia-resalte-inactivo.png](artifacts/ERR-002-vivanco-ciclovia-resalte-inactivo.png)
+- **Comprobaciones ejecutadas personalmente y resultados:**
+  1. Inspección visual directa de capturas:
+     - Resalte activo: Tramo 1 (4111 m) se visualiza en verde Guaraní Emerald (`#10b981`), mientras que Tramo 2 (360 m) se visualiza en azul River Azure (`#0284c7`), reflejando con exactitud los atributos de ciclovía por tramo.
+     - Resalte inactivo: Ambos tramos se visualizan uniformemente en azul River Azure (`#0284c7`), conservando íntegras las geometrías de la traza oficial.
+  2. `npm test`: 41 tests pasados en 19 suites, 0 fallos (incluyendo la prueba de integración de tramos mixtos).
+  3. `npm run build`: Compilación limpia en Next.js (Turbopack) sin errores ni advertencias (exit code 0).
+- **Hallazgos:** Ninguno.
+- **Dictamen:** FAVORABLE. AC-001 a AC-005 plenamente verificados. Conforme para cierre definitivo.
+
+

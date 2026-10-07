@@ -65,7 +65,7 @@ Consultá la [Guía completa de Despliegue](docs/deployment.md) para configuraci
 ## 🧪 Pruebas y Validación Empírica
 
 ```bash
-# Ejecutar suite de pruebas unitarias y de integración (33 tests)
+# Ejecutar suite de pruebas unitarias y de integración
 npm test
 
 # Verificar integridad física e índices espaciales de la base de datos
@@ -79,18 +79,7 @@ npm run build
 
 ## 📋 Catálogo de Especificaciones y Gobernanza SDD
 
-El desarrollo del MVP se gestionó mediante el arnés SDD liviano, con especificaciones ejecutables, contratos aprobados y evidencia histórica fechada:
-
-| Feature | Descripción | Estado |
-|---|---|---|
-| [FEAT-001](specs/feat-001/spec.md) | Ingesta, normalización y esquema de datos base (Calles, Barrios, Ciclovías) | Verificada |
-| [FEAT-002](specs/feat-002/spec.md) | Motor de búsqueda unificado y endpoints de catálogo (`/api/v1/streets`) | Verificada |
-| [FEAT-003](specs/feat-003/spec.md) | Visor cartográfico interactivo y maquetación de fichas en Leaflet | Verificada |
-| [FEAT-004](specs/feat-004/spec.md) | Pantalla de métricas de cobertura y completitud del nomenclador (`/stats`) | Verificada |
-| [FEAT-005](specs/feat-005/spec.md) | Rediseño visual responsivo del visor y optimización espacial con Stitch | Verificada |
-| [FEAT-006](specs/feat-006/spec.md) | Saneamiento toponímico, desduplicación y consolidación de tramos en ETL | Verificada |
-
-Para más detalles consultar:
+El desarrollo y gobernanza del proyecto se gestionan mediante el arnés SDD liviano. El catálogo de especificaciones, estado vigente y trazabilidad se encuentran centralizados en:
 - [Catálogo de Specs](specs/index.md)
 - [Contexto del Producto](docs/project.md)
 - [Decisiones de Arquitectura](docs/decisions.md)

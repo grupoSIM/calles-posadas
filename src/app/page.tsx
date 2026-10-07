@@ -289,6 +289,7 @@ export default function HomePage() {
             hasCycleway={selectedDetail?.has_cycleway}
             cyclewayType={selectedDetail?.cycleway_type}
             tramos={selectedDetail?.tramos}
+            barrios={selectedDetail?.barrios}
             className="w-full h-full"
           />
         </div>

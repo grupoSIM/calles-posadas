@@ -9,6 +9,44 @@ interface StreetDetailCardProps {
   isCompact?: boolean;
 }
 
+const TOPONYM_BADGES: Record<string, { label: string; icon: string; className: string }> = {
+  PROCER: {
+    label: 'Prócer / Figura Histórica',
+    icon: '🏛️',
+    className: 'bg-amber-100 text-amber-900 border-amber-300'
+  },
+  PUEBLOS_ORIGINARIOS: {
+    label: 'Pueblos Originarios',
+    icon: '🏹',
+    className: 'bg-orange-100 text-orange-900 border-orange-300'
+  },
+  GEOGRAFIA: {
+    label: 'Geografía',
+    icon: '🌎',
+    className: 'bg-blue-100 text-blue-900 border-blue-300'
+  },
+  FECHA_PATRIA: {
+    label: 'Fecha Patria',
+    icon: '🇦🇷',
+    className: 'bg-sky-100 text-sky-900 border-sky-300'
+  },
+  BOTANICA_FAUNA: {
+    label: 'Flora y Fauna',
+    icon: '🌿',
+    className: 'bg-emerald-100 text-emerald-900 border-emerald-300'
+  },
+  CIENCIA_CULTURA: {
+    label: 'Ciencia y Cultura',
+    icon: '🎨',
+    className: 'bg-purple-100 text-purple-900 border-purple-300'
+  },
+  OTRO: {
+    label: 'General',
+    icon: '🏷️',
+    className: 'bg-slate-100 text-slate-700 border-slate-300'
+  }
+};
+
 export default function StreetDetailCard({
   street,
   onClose,
@@ -28,6 +66,10 @@ export default function StreetDetailCard({
       ? 'Peatonal'
       : street.traffic_direction || 'Sin registrar';
 
+  const toponymBadge = street.toponym_category && street.toponym_category !== 'OTRO'
+    ? TOPONYM_BADGES[street.toponym_category] || null
+    : null;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col h-full">
       {/* Encabezado de la Ficha */}
@@ -38,6 +80,7 @@ export default function StreetDetailCard({
             onClick={onClose}
             className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
             title="Cerrar ficha"
+            aria-label="Cerrar ficha"
           >
             ✕
           </button>
@@ -55,6 +98,14 @@ export default function StreetDetailCard({
           {street.has_cycleway && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1">
               <span>🚲</span> {street.cycleway_type ? street.cycleway_type.replace('_', ' ') : 'Ciclovía'}
+            </span>
+          )}
+          {toponymBadge && (
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${toponymBadge.className}`}
+              title={`Categoría toponímica: ${toponymBadge.label}`}
+            >
+              <span>{toponymBadge.icon}</span> {toponymBadge.label}
             </span>
           )}
         </div>

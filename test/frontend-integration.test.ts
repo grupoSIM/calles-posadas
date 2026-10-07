@@ -60,6 +60,26 @@ describe('FEAT-003: Integración Frontend y Visor Cartográfico', () => {
       const cycleTramos = street.tramos.filter((t) => t.tiene_ciclovia);
       assert.ok(cycleTramos.length > 0, 'La arteria debe registrar al menos un tramo con ciclovía');
     });
+
+    test('ERR-002: Arteria con tramos mixtos (Avenida Vivanco N° 139) contiene tramos diferenciales con y sin ciclovía y geometrías asociadas', () => {
+      const vivanco = getStreetBySlug('avenida-arq-jorge-eduardo-vivanco-139');
+      assert.ok(vivanco, 'Debe existir Avenida Vivanco');
+      assert.equal(vivanco.tramos.length, 2, 'Debe tener exactamente 2 tramos');
+
+      const tramoConCiclovia = vivanco.tramos.find((t) => t.tiene_ciclovia);
+      const tramoSinCiclovia = vivanco.tramos.find((t) => !t.tiene_ciclovia);
+
+      assert.ok(tramoConCiclovia, 'Debe existir tramo con ciclovía (Tramo 1)');
+      assert.ok(tramoSinCiclovia, 'Debe existir tramo sin ciclovía (Tramo 2)');
+      assert.equal(tramoConCiclovia.orden, 1);
+      assert.equal(tramoSinCiclovia.orden, 2);
+
+      // Cada tramo individual debe poseer su geometría geojson para renderizado independiente
+      assert.ok(tramoConCiclovia.geojson, 'Tramo 1 debe poseer su geojson');
+      assert.ok(tramoSinCiclovia.geojson, 'Tramo 2 debe poseer su geojson');
+      assert.ok(tramoConCiclovia.longitud_m > 3000, 'Tramo 1 longitud > 3 km');
+      assert.ok(tramoSinCiclovia.longitud_m < 1000, 'Tramo 2 longitud < 1 km');
+    });
   });
 
   describe('T-001, T-003, T-005: Integración de Módulos y Componentes', () => {
@@ -95,6 +115,19 @@ describe('FEAT-003: Integración Frontend y Visor Cartográfico', () => {
 
       const pageElement = await StreetDetailPage({ params: Promise.resolve({ slug: 'avenida-juan-maza-140' }) });
       assert.ok(pageElement);
+    });
+  });
+
+  describe('FEAT-008: AC-002 Capa interactiva de barrios en visor', () => {
+    test('StreetViewer soporta contrato de barrios y barriosGeojson', async () => {
+      const StreetViewer = (await import('../src/components/map/StreetViewer')).default;
+      assert.equal(typeof StreetViewer, 'function');
+
+      // Validar que una arteria expone su lista de barrios asociados para resaltado contextual
+      const street = getStreetBySlug('calle-jujuy-49');
+      assert.ok(street);
+      assert.ok(Array.isArray(street.barrios));
+      assert.ok(street.barrios.length > 0, 'Calle Jujuy debe asociar barrios');
     });
   });
 });

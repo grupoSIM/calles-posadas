@@ -255,8 +255,27 @@ export function hasValidCoordinates(geom: any): boolean {
 }
 
 // Normalizar capa de barrios
-export function transformBarrios(barriosData: { features: RawBarrioFeature[] }): NormalizedBarrio[] {
+export function transformBarrios(
+  barriosData: { features: RawBarrioFeature[] },
+  barriosNormativaData?: { features: any[] }
+): NormalizedBarrio[] {
   const validFeatures = (barriosData.features || []).filter(f => hasValidCoordinates(f.geometry));
+
+  // Mapa de ordenanzas por nombre normalizado
+  const ordenanzasByName = new Map<string, string>();
+  const cleanKey = (s: string) =>
+    stripAccents(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  if (barriosNormativaData?.features) {
+    for (const feat of barriosNormativaData.features) {
+      const nombre = feat.properties?.NOMBRE_BARRIO;
+      const ordenanza = feat.properties?.ORDENANZA;
+      if (nombre && ordenanza) {
+        ordenanzasByName.set(cleanKey(nombre), ordenanza.trim());
+      }
+    }
+  }
+
   return validFeatures.map((feat, index) => {
     const rawName = (feat.properties?.nom_barrio || `Barrio ${index + 1}`).trim();
     const upper = rawName.toUpperCase();
@@ -273,16 +292,132 @@ export function transformBarrios(barriosData: { features: RawBarrioFeature[] }):
     const bboxRaw = turf.bbox(feat as any);
     const bbox: [number, number, number, number] = [bboxRaw[0], bboxRaw[1], bboxRaw[2], bboxRaw[3]];
 
+    // Buscar ordenanza por nombre o cruce espacial
+    let referenciaOrdenanza: string | null = ordenanzasByName.get(cleanKey(rawName)) || null;
+
+    if (!referenciaOrdenanza && barriosNormativaData?.features) {
+      try {
+        const centroid = turf.pointOnFeature(feat as any);
+        for (const bNorm of barriosNormativaData.features) {
+          if (bNorm.properties?.ORDENANZA && bNorm.geometry && hasValidCoordinates(bNorm.geometry)) {
+            if (turf.booleanPointInPolygon(centroid, { type: 'Feature', geometry: bNorm.geometry, properties: {} })) {
+              referenciaOrdenanza = bNorm.properties.ORDENANZA.trim();
+              break;
+            }
+          }
+        }
+      } catch {}
+    }
+
     return {
       originalId: feat.id || `barrio-${index + 1}`,
       nombre: toTitleCase(rawName),
       tipo,
       numeroChacra,
-      referenciaOrdenanza: null,
+      referenciaOrdenanza,
       geojson: feat.geometry,
       bbox
     };
   });
+}
+
+// Determinar si una arteria es de mano única según la capa oficial de la IDE Posadas o toponimia consolidada
+export function isManoUnica(
+  cleanName: string,
+  tipoVia: string,
+  manosUnicasData?: { features: any[] }
+): boolean {
+  const normName = stripAccents(cleanName).toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+
+  // Avenidas de mano única consolidadas históricamente en Posadas (ej. Av. Corrientes)
+  if (normName.includes('corrientes') && tipoVia === 'AVENIDA') {
+    return true;
+  }
+
+  const knownAvenues = [
+    'francisco de haro',
+    'rademacher',
+    'centenario',
+    'blas parera',
+    'tambor de tacuari',
+    'lopez y planes',
+    'lavalle',
+    'santa catalina'
+  ];
+
+  if (!manosUnicasData?.features || manosUnicasData.features.length === 0) {
+    if (tipoVia === 'AVENIDA') {
+      return knownAvenues.some(kw => normName.includes(kw));
+    }
+    return false;
+  }
+
+  for (const feat of manosUnicasData.features) {
+    const rawNomb = feat.properties?.NOMB_ || '';
+    if (!rawNomb) continue;
+    const cleanNomb = stripAccents(rawNomb).toLowerCase().replace(/^(av|avenida|calle)\s+/, '').replace(/[^a-z0-9]/g, ' ').trim();
+    const tokens = cleanNomb.split(/\s+/).filter(w => !TOPONYM_STOPWORDS.has(w));
+    if (tokens.length === 0) continue;
+
+    if (tokens.length === 1 && normName.includes(tokens[0])) {
+      return true;
+    }
+    if (tokens.length > 1 && tokens.every(tok => normName.includes(tok))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export interface DigestoCalleEntry {
+  nombre_oficial: string;
+  nombre_normalizado: string;
+  numero_calle?: number | null;
+  referencia_ordenanza: string;
+  url_ordenanza: string;
+  explicacion: string;
+  categoria_toponimica: string;
+}
+
+export function findDigestoEntry(
+  cleanName: string,
+  nombreNormalizado: string,
+  numeroCalle: number | null,
+  digestoEntries?: DigestoCalleEntry[] | { [key: string]: any }
+): DigestoCalleEntry | null {
+  if (!digestoEntries) return null;
+  const list: DigestoCalleEntry[] = Array.isArray(digestoEntries)
+    ? digestoEntries
+    : ((digestoEntries as any).features || (digestoEntries as any).data || []);
+  if (!list || list.length === 0) return null;
+
+  const normClean = stripAccents(cleanName.toLowerCase().trim());
+  const normNorm = stripAccents(nombreNormalizado.toLowerCase().trim());
+
+  // 1. Coincidencia directa por nombre normalizado u oficial
+  for (const entry of list) {
+    const entryNorm = stripAccents((entry.nombre_normalizado || '').toLowerCase().trim());
+    const entryOficial = stripAccents((entry.nombre_oficial || '').toLowerCase().trim());
+    if (entryNorm === normNorm || entryOficial === normClean || entryNorm === normClean || entryOficial === normNorm) {
+      return entry;
+    }
+  }
+
+  // 2. Coincidencia por número de calle si ambos lo poseen y hay afinidad toponímica
+  if (numeroCalle !== null) {
+    for (const entry of list) {
+      if (entry.numero_calle === numeroCalle) {
+        const entryBase = stripAccents((entry.nombre_normalizado || '').replace(/^(avenida|calle|pasaje)\s+/, '').trim());
+        const targetBase = stripAccents(normNorm.replace(/^(avenida|calle|pasaje)\s+/, '').trim());
+        if (targetBase && entryBase && (targetBase.includes(entryBase) || entryBase.includes(targetBase))) {
+          return entry;
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 // Normalizar capa de calles y avenidas con cruces espaciales
@@ -290,7 +425,9 @@ export function transformCalles(
   callesData: { features: RawCalleFeature[] },
   barrios: NormalizedBarrio[],
   bicisendasData: { features: RawBicisendaFeature[] },
-  avenidasData?: { features: RawCalleFeature[] }
+  avenidasData?: { features: RawCalleFeature[] },
+  manosUnicasData?: { features: any[] },
+  digestoCallesData?: DigestoCalleEntry[] | { [key: string]: any }
 ): NormalizedCalle[] {
   // Pre-computar buffers o geometrías de bicisendas para cruce rápido
   const bicisendaFeatures = (bicisendasData?.features || []).filter(f => hasValidCoordinates(f.geometry));
@@ -373,6 +510,36 @@ export function transformCalles(
   for (const indices of byNumberAndType.values()) {
     if (indices.length <= 1) continue;
 
+    const n = indices.length;
+    const isVariant: boolean[][] = Array.from({ length: n }, () => Array(n).fill(false));
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (areToponymVariants(groupsList[indices[i]]!.cleanName, groupsList[indices[j]]!.cleanName)) {
+          isVariant[i][j] = true;
+          isVariant[j][i] = true;
+        }
+      }
+    }
+
+    // Detectar nodos ambiguos:
+    // Un nodo i es ambiguo si tiene dos vecinos j y k que NO son variantes entre sí.
+    const isAmbiguous = new Set<number>();
+    for (let i = 0; i < n; i++) {
+      const neighbors: number[] = [];
+      for (let j = 0; j < n; j++) {
+        if (isVariant[i][j]) neighbors.push(j);
+      }
+      for (let a = 0; a < neighbors.length; a++) {
+        for (let b = a + 1; b < neighbors.length; b++) {
+          if (!isVariant[neighbors[a]][neighbors[b]]) {
+            isAmbiguous.add(i);
+            break;
+          }
+        }
+        if (isAmbiguous.has(i)) break;
+      }
+    }
+
     const parent = indices.map((_, idx) => idx);
     const find = (i: number): number => {
       if (parent[i] === i) return i;
@@ -384,9 +551,12 @@ export function transformCalles(
       if (rootI !== rootJ) parent[rootI] = rootJ;
     };
 
-    for (let i = 0; i < indices.length; i++) {
-      for (let j = i + 1; j < indices.length; j++) {
-        if (areToponymVariants(groupsList[indices[i]]!.cleanName, groupsList[indices[j]]!.cleanName)) {
+    // Unir únicamente pares no ambiguos que sean variantes mutuas
+    for (let i = 0; i < n; i++) {
+      if (isAmbiguous.has(i)) continue;
+      for (let j = i + 1; j < n; j++) {
+        if (isAmbiguous.has(j)) continue;
+        if (isVariant[i][j]) {
           union(i, j);
         }
       }
@@ -539,6 +709,11 @@ export function transformCalles(
     const longitudTotalM = Math.round(tramos.reduce((acc, t) => acc + t.longitudM, 0) * 100) / 100;
     const tieneCicloviaCalle = tramos.some(t => t.tieneCiclovia);
 
+    const esMano = isManoUnica(group.cleanName, group.tipoVia, manosUnicasData);
+    const sentidoCirculacion: 'MANO_UNICA' | 'DOBLE' | 'PEATONAL' = esMano ? 'MANO_UNICA' : 'DOBLE';
+
+    const digestoEntry = findDigestoEntry(group.cleanName, group.nombreNormalizado, group.numeroCalle, digestoCallesData);
+
     normalizedCalles.push({
       originalId: group.features[0].id || `calle-${groupIndex}`,
       slug,
@@ -546,14 +721,14 @@ export function transformCalles(
       nombreNormalizado: group.nombreNormalizado,
       numeroCalle: group.numeroCalle,
       tipoVia: group.tipoVia,
-      sentidoCirculacion: 'DOBLE',
+      sentidoCirculacion,
       longitudTotalM,
       tieneCiclovia: tieneCicloviaCalle,
       tipoCiclovia: tieneCicloviaCalle ? (groupTipoCiclovia || 'CICLOVIA') : null,
-      explicacion: null,
-      referenciaOrdenanza: null,
-      urlOrdenanza: null,
-      categoriaToponimica: 'OTRO',
+      explicacion: digestoEntry ? digestoEntry.explicacion : null,
+      referenciaOrdenanza: digestoEntry ? digestoEntry.referencia_ordenanza : null,
+      urlOrdenanza: digestoEntry ? digestoEntry.url_ordenanza : null,
+      categoriaToponimica: digestoEntry ? digestoEntry.categoria_toponimica : 'OTRO',
       bbox,
       geojson: consolidatedGeometry,
       barrioIds,

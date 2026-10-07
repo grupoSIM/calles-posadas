@@ -264,5 +264,102 @@ describe('T-003: Normalización toponímica y procesamiento espacial', () => {
       assert.equal(suiza?.nombreOficial, 'Calle Suiza');
       assert.equal(santaAna?.nombreOficial, 'Calle Santa Ana');
     });
+
+    test('ERR-001 (Regresión): No fusión indebida por variante ambigua (Juan Perez vs Perez vs Pedro Perez N° 50)', () => {
+      const rawFeatures = {
+        features: [
+          {
+            type: 'Feature',
+            id: 'jp1',
+            properties: { fid: 101, CALLE: 'CALLE JUAN PEREZ(50)', NUM_CALLE: '(50)' },
+            geometry: { type: 'LineString', coordinates: [[-55.900, -27.350], [-55.910, -27.350]] }
+          },
+          {
+            type: 'Feature',
+            id: 'p1',
+            properties: { fid: 102, CALLE: 'CALLE PEREZ(50)', NUM_CALLE: '(50)' },
+            geometry: { type: 'LineString', coordinates: [[-55.920, -27.350], [-55.930, -27.350]] }
+          },
+          {
+            type: 'Feature',
+            id: 'pp1',
+            properties: { fid: 103, CALLE: 'CALLE PEDRO PEREZ(50)', NUM_CALLE: '(50)' },
+            geometry: { type: 'LineString', coordinates: [[-55.940, -27.350], [-55.950, -27.350]] }
+          }
+        ]
+      };
+
+      const calles = transformCalles(rawFeatures as any, [], { features: [] });
+      assert.equal(calles.length, 3, 'Deben permanecer 3 arterias separadas; Perez no debe forzar la unión de Juan y Pedro');
+
+      const juanPerez = calles.find(c => c.slug === 'calle-juan-perez-50');
+      const pedroPerez = calles.find(c => c.slug === 'calle-pedro-perez-50');
+      const perez = calles.find(c => c.slug === 'calle-perez-50');
+
+      assert.ok(juanPerez, 'Debe existir calle-juan-perez-50 separada');
+      assert.ok(pedroPerez, 'Debe existir calle-pedro-perez-50 separada');
+      assert.ok(perez, 'Debe existir calle-perez-50 separada sin asignación arbitraria');
+
+      assert.equal(juanPerez?.nombreOficial, 'Calle Juan Perez');
+      assert.equal(pedroPerez?.nombreOficial, 'Calle Pedro Perez');
+      assert.equal(perez?.nombreOficial, 'Calle Perez');
+
+      // Verificar que se conservan geometrías, longitudes y atributos de los tramos
+      assert.equal(juanPerez?.tramos.length, 1);
+      assert.equal(pedroPerez?.tramos.length, 1);
+      assert.equal(perez?.tramos.length, 1);
+      assert.ok((juanPerez?.longitudTotalM ?? 0) > 0);
+      assert.ok((pedroPerez?.longitudTotalM ?? 0) > 0);
+      assert.ok((perez?.longitudTotalM ?? 0) > 0);
+    });
+  });
+
+  describe('FEAT-008: Enriquecimiento de manos únicas y ordenanzas de barrios', () => {
+    test('isManoUnica identifica correctamente arterias de mano única', async () => {
+      const { isManoUnica } = await import('../scripts/etl/transform.js');
+      assert.equal(isManoUnica('Avenida Corrientes', 'AVENIDA'), true);
+      assert.equal(isManoUnica('Avenida Francisco de Haro', 'AVENIDA'), true);
+      assert.equal(isManoUnica('Avenida Padre Jose F. Rademacher', 'AVENIDA'), true);
+      assert.equal(isManoUnica('Avenida General Juan Lavalle', 'AVENIDA'), true);
+      assert.equal(isManoUnica('Avenida Santa Catalina', 'AVENIDA'), true);
+      assert.equal(isManoUnica('Calle Jujuy', 'CALLE'), false);
+      assert.equal(isManoUnica('Avenida Uruguay', 'AVENIDA'), false);
+    });
+
+    test('transformBarrios enriquece ordenanzas normativas desde barriosNormativaData', async () => {
+      const { transformBarrios } = await import('../scripts/etl/transform.js');
+      const rawBarrios = {
+        features: [
+          {
+            type: 'Feature',
+            id: 'b1',
+            properties: { fid: 1, nom_barrio: 'Villa Sarita' },
+            geometry: {
+              type: 'Polygon',
+              coordinates: [[[-55.90, -27.36], [-55.89, -27.36], [-55.89, -27.35], [-55.90, -27.35], [-55.90, -27.36]]]
+            }
+          }
+        ]
+      };
+      const rawNormativa = {
+        features: [
+          {
+            type: 'Feature',
+            id: 'bn1',
+            properties: { fid: 1, NOMBRE_BARRIO: 'Villa Sarita', ORDENANZA: 'ORD. XII N° 45' },
+            geometry: {
+              type: 'Polygon',
+              coordinates: [[[-55.90, -27.36], [-55.89, -27.36], [-55.89, -27.35], [-55.90, -27.35], [-55.90, -27.36]]]
+            }
+          }
+        ]
+      };
+
+      const transformed = transformBarrios(rawBarrios as any, rawNormativa as any);
+      assert.equal(transformed.length, 1);
+      assert.equal(transformed[0].referenciaOrdenanza, 'ORD. XII N° 45');
+    });
   });
 });
+
+

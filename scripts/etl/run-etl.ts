@@ -18,11 +18,11 @@ export async function runETL(options: { offline?: boolean; dbPath?: string } = {
 
   // 2. Transformar capas
   console.log('Transformando barrios y chacras...');
-  const barrios = transformBarrios(layers.barrios);
+  const barrios = transformBarrios(layers.barrios, layers.barrios_normativa);
   console.log(` -> ${barrios.length} barrios y chacras procesados.`);
 
   console.log('Transformando calles y avenidas, calculando longitudes y cruces espaciales...');
-  const calles = transformCalles(layers.calles, barrios, layers.bicisendas, layers.avenidas);
+  const calles = transformCalles(layers.calles, barrios, layers.bicisendas, layers.avenidas, layers.manos_unicas, layers.digesto_calles);
   console.log(` -> ${calles.length} calles y avenidas procesadas.`);
 
   // 3. Inicializar y cargar base de datos

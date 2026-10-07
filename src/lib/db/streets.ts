@@ -22,6 +22,7 @@ export interface CalleSummary {
   has_cycleway: boolean;
   preview_explanation: string | null;
   barrios: string[];
+  toponym_category?: string;
 }
 
 export interface SearchStreetsResult {
@@ -42,6 +43,7 @@ export interface CalleDetail {
   has_cycleway: boolean;
   cycleway_type: string | null;
   explanation: string | null;
+  toponym_category?: string;
   ordinance: {
     reference: string | null;
     url: string | null;
@@ -54,6 +56,7 @@ export interface CalleDetail {
     altura_fin: number | null;
     tiene_ciclovia: boolean;
     longitud_m: number;
+    geojson?: any;
   }[];
 }
 
@@ -145,6 +148,7 @@ export function searchStreets(params: SearchStreetsParams, customDb?: Database.D
       c.longitud_total_m,
       c.tiene_ciclovia,
       c.explicacion,
+      c.categoria_toponimica,
       (
         SELECT GROUP_CONCAT(b.nombre, '|||')
         FROM calle_barrios cb
@@ -169,7 +173,8 @@ export function searchStreets(params: SearchStreetsParams, customDb?: Database.D
     total_length_m: r.longitud_total_m,
     has_cycleway: r.tiene_ciclovia === 1,
     preview_explanation: r.explicacion ? r.explicacion.slice(0, 150) + '...' : null,
-    barrios: r.barrios_list ? r.barrios_list.split('|||') : []
+    barrios: r.barrios_list ? r.barrios_list.split('|||') : [],
+    toponym_category: r.categoria_toponimica || 'OTRO'
   }));
 
   return {
@@ -224,19 +229,29 @@ export function getStreetBySlug(slug: string, customDb?: Database.Database): Cal
       t.altura_inicio,
       t.altura_fin,
       t.tiene_ciclovia,
-      t.longitud_m
+      t.longitud_m,
+      t.geojson
     FROM tramos_calle t
     WHERE t.calle_id = ?
     ORDER BY t.orden_tramo ASC
   `;
   const tramosRows = db.prepare(tramosSql).all(street.id) as any[];
-  const tramos = tramosRows.map(t => ({
-    orden: t.orden_tramo,
-    altura_inicio: t.altura_inicio,
-    altura_fin: t.altura_fin,
-    tiene_ciclovia: t.tiene_ciclovia === 1,
-    longitud_m: t.longitud_m
-  }));
+  const tramos = tramosRows.map(t => {
+    let tramoGeojson = null;
+    try {
+      tramoGeojson = t.geojson ? JSON.parse(t.geojson) : null;
+    } catch {
+      tramoGeojson = null;
+    }
+    return {
+      orden: t.orden_tramo,
+      altura_inicio: t.altura_inicio,
+      altura_fin: t.altura_fin,
+      tiene_ciclovia: t.tiene_ciclovia === 1,
+      longitud_m: t.longitud_m,
+      geojson: tramoGeojson
+    };
+  });
 
   let geojson = null;
   try {
@@ -256,6 +271,7 @@ export function getStreetBySlug(slug: string, customDb?: Database.Database): Cal
     has_cycleway: street.tiene_ciclovia === 1,
     cycleway_type: street.tipo_ciclovia,
     explanation: street.explicacion,
+    toponym_category: street.categoria_toponimica || 'OTRO',
     ordinance: street.referencia_ordenanza || street.url_ordenanza ? {
       reference: street.referencia_ordenanza,
       url: street.url_ordenanza
@@ -283,3 +299,90 @@ export function listBarrios(customDb?: Database.Database): BarrioSummary[] {
     chacra_number: r.numero_chacra
   }));
 }
+
+export interface BarriosGeoJsonParams {
+  id?: number;
+  q?: string;
+}
+
+export interface BarrioGeoJsonFeature {
+  type: 'Feature';
+  id: number;
+  properties: {
+    id: number;
+    nombre: string;
+    tipo: string;
+    numero_chacra: number | null;
+    referencia_ordenanza: string | null;
+  };
+  geometry: any;
+}
+
+export interface BarriosFeatureCollection {
+  type: 'FeatureCollection';
+  features: BarrioGeoJsonFeature[];
+}
+
+export function getBarriosGeoJson(
+  params: BarriosGeoJsonParams = {},
+  customDb?: Database.Database
+): BarriosFeatureCollection {
+  const db = customDb || getDatabase();
+
+  const whereConditions: string[] = [];
+  const queryArgs: any[] = [];
+
+  if (params.id) {
+    whereConditions.push('id = ?');
+    queryArgs.push(Number(params.id));
+  }
+
+  if (params.q) {
+    const qClean = params.q.trim();
+    const chacraNum = parseInt(qClean.replace(/\D/g, ''), 10);
+    if (!isNaN(chacraNum)) {
+      whereConditions.push('(nombre LIKE ? OR numero_chacra = ?)');
+      queryArgs.push(`%${qClean}%`, chacraNum);
+    } else {
+      whereConditions.push('nombre LIKE ?');
+      queryArgs.push(`%${qClean}%`);
+    }
+  }
+
+  const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+  const sql = `
+    SELECT id, nombre, tipo, numero_chacra, referencia_ordenanza, geojson
+    FROM barrios
+    ${whereClause}
+    ORDER BY nombre ASC
+  `;
+
+  const rows = db.prepare(sql).all(...queryArgs) as any[];
+
+  const features: BarrioGeoJsonFeature[] = rows.map((r) => {
+    let geom = null;
+    try {
+      geom = JSON.parse(r.geojson);
+    } catch {
+      geom = null;
+    }
+    return {
+      type: 'Feature',
+      id: r.id,
+      properties: {
+        id: r.id,
+        nombre: r.nombre,
+        tipo: r.tipo,
+        numero_chacra: r.numero_chacra,
+        referencia_ordenanza: r.referencia_ordenanza,
+      },
+      geometry: geom,
+    };
+  });
+
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
+}
+

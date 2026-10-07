@@ -9,6 +9,7 @@ export interface TramoInfo {
   altura_inicio: number | null;
   altura_fin: number | null;
   longitud_m: number;
+  geojson?: any;
 }
 
 export interface StreetViewerProps {
@@ -17,6 +18,8 @@ export interface StreetViewerProps {
   hasCycleway?: boolean;
   cyclewayType?: string | null;
   tramos?: TramoInfo[];
+  barrios?: string[];
+  barriosGeojson?: any | null;
   className?: string;
 }
 
@@ -29,13 +32,18 @@ export default function StreetViewer({
   hasCycleway = false,
   cyclewayType,
   tramos = [],
+  barrios = [],
+  barriosGeojson = null,
   className = 'w-full h-full',
 }: StreetViewerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
   const geojsonLayerRef = useRef<LeafletGeoJSON | null>(null);
+  const barriosLayerRef = useRef<LeafletGeoJSON | null>(null);
   const [highlightCycleways, setHighlightCycleways] = useState(true);
+  const [showBarrios, setShowBarrios] = useState(false);
+  const [barriosData, setBarriosData] = useState<any>(barriosGeojson || null);
 
   // Inicialización del mapa en cliente con controles HUD personalizados
   useEffect(() => {
@@ -132,10 +140,65 @@ export default function StreetViewer({
         return;
       }
 
-      const layer = L.geoJSON(geojson, {
+      // Determinar la estructura GeoJSON a renderizar
+      // Si hay tramos con información geométrica o multi-trazas, construir un FeatureCollection
+      // con propiedades individuales por tramo para permitir estilización y popups diferenciales
+      let dataToRender: any = geojson;
+
+      if (tramos && tramos.length > 0) {
+        const hasGeometries = tramos.some((t) => t.geojson);
+        if (hasGeometries) {
+          dataToRender = {
+            type: 'FeatureCollection',
+            features: tramos
+              .filter((t) => t.geojson)
+              .map((t) => ({
+                type: 'Feature',
+                properties: {
+                  orden: t.orden,
+                  tiene_ciclovia: t.tiene_ciclovia,
+                  longitud_m: t.longitud_m,
+                  altura_inicio: t.altura_inicio,
+                  altura_fin: t.altura_fin,
+                },
+                geometry: t.geojson,
+              })),
+          };
+        } else if (geojson?.type === 'MultiLineString' && Array.isArray(geojson.coordinates)) {
+          if (geojson.coordinates.length === tramos.length) {
+            dataToRender = {
+              type: 'FeatureCollection',
+              features: tramos.map((t, idx) => ({
+                type: 'Feature',
+                properties: {
+                  orden: t.orden,
+                  tiene_ciclovia: t.tiene_ciclovia,
+                  longitud_m: t.longitud_m,
+                  altura_inicio: t.altura_inicio,
+                  altura_fin: t.altura_fin,
+                },
+                geometry: {
+                  type: 'LineString',
+                  coordinates: geojson.coordinates[idx],
+                },
+              })),
+            };
+          }
+        }
+      }
+
+      const layer = L.geoJSON(dataToRender, {
         style: (feature) => {
-          const featureCycle = feature?.properties?.tiene_ciclovia || hasCycleway;
-          const isCycle = highlightCycleways && featureCycle;
+          let tramoCycle = false;
+          if (feature?.properties && typeof feature.properties.tiene_ciclovia === 'boolean') {
+            tramoCycle = feature.properties.tiene_ciclovia;
+          } else if (tramos && tramos.length === 1) {
+            tramoCycle = tramos[0].tiene_ciclovia;
+          } else {
+            tramoCycle = hasCycleway;
+          }
+
+          const isCycle = highlightCycleways && tramoCycle;
           return {
             color: isCycle ? '#10b981' : '#0284c7', // Guaraní Emerald vs River Azure (Stitch)
             weight: isCycle ? 6 : 5,
@@ -146,11 +209,17 @@ export default function StreetViewer({
         },
         onEachFeature: (feature, featureLayer: Layer) => {
           const props = feature.properties || {};
+          const tramoCycle =
+            typeof props.tiene_ciclovia === 'boolean' ? props.tiene_ciclovia : hasCycleway;
+          const tramoOrden = props.orden || null;
+          const tramoLongitud = props.longitud_m ? Math.round(props.longitud_m) : null;
+
           const popupHtml = `
             <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
               <strong style="color: #0f172a; font-size: 14px;">${activeStreetName || 'Arteria seleccionada'}</strong>
-              ${hasCycleway ? `<div style="color: #047857; font-weight: 600; margin-top: 4px;">🚲 Posee ciclovía / bicisenda</div>` : ''}
-              ${cyclewayType ? `<div style="color: #64748b; font-size: 11px;">Tipo: ${cyclewayType}</div>` : ''}
+              ${tramoOrden ? `<div style="color: #64748b; font-size: 11px; margin-top: 2px;">Tramo ${tramoOrden} ${tramoLongitud ? `(${tramoLongitud} m)` : ''}</div>` : ''}
+              ${tramoCycle ? `<div style="color: #047857; font-weight: 600; margin-top: 4px;">🚲 Posee ciclovía / bicisenda</div>` : ''}
+              ${cyclewayType && tramoCycle ? `<div style="color: #64748b; font-size: 11px;">Tipo: ${cyclewayType}</div>` : ''}
               ${props.start_height && props.end_height ? `<div style="color: #475569; margin-top: 2px;">Alturas: ${props.start_height} — ${props.end_height}</div>` : ''}
             </div>
           `;
@@ -179,6 +248,104 @@ export default function StreetViewer({
       isCancelled = true;
     };
   }, [mapInstance, geojson, activeStreetName, hasCycleway, cyclewayType, tramos, highlightCycleways]);
+
+  // Carga asíncrona de polígonos GeoJSON de barrios al activar el conmutador
+  useEffect(() => {
+    if (barriosGeojson) {
+      setBarriosData(barriosGeojson);
+      return;
+    }
+    if (showBarrios && !barriosData) {
+      fetch('/api/v1/barrios/geojson')
+        .then((res) => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then((data) => setBarriosData(data))
+        .catch((err) => console.error('Error al cargar capa GeoJSON de barrios:', err));
+    }
+  }, [showBarrios, barriosData, barriosGeojson]);
+
+  // Renderizado y sincronización de la capa vectorial de barrios en Leaflet
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function updateBarriosLayer() {
+      if (!mapInstance) return;
+      const L = await import('leaflet');
+      if (isCancelled) return;
+
+      if (barriosLayerRef.current) {
+        mapInstance.removeLayer(barriosLayerRef.current);
+        barriosLayerRef.current = null;
+      }
+
+      if (!showBarrios || !barriosData) return;
+
+      const activeBarriosSet = new Set((barrios || []).map((b) => b.toLowerCase().trim()));
+
+      const layer = L.geoJSON(barriosData, {
+        style: (feature) => {
+          const props = feature?.properties || {};
+          const bName = (props.nombre || '').toLowerCase().trim();
+          const isContextual = activeBarriosSet.has(bName);
+
+          if (isContextual) {
+            return {
+              color: '#0284c7', // River Azure resaltado
+              weight: 2.5,
+              fillColor: '#38bdf8',
+              fillOpacity: 0.22,
+            };
+          }
+
+          return {
+            color: '#64748b', // Slate sutil
+            weight: 1.2,
+            fillColor: '#94a3b8',
+            fillOpacity: 0.08,
+            dashArray: '4, 4',
+          };
+        },
+        onEachFeature: (feature, featureLayer: Layer) => {
+          const props = feature.properties || {};
+          const name = props.nombre || 'Barrio sin nombre';
+          const chacra = props.numero_chacra ? `Chacra ${props.numero_chacra}` : null;
+          const tipo = props.tipo === 'CHACRA' ? 'Chacra' : props.tipo === 'BARRIO_OFICIAL' ? 'Barrio Oficial' : 'Barrio';
+          const ordenanza = props.referencia_ordenanza;
+
+          featureLayer.bindTooltip(
+            `<strong>${name}</strong>${chacra ? ` (${chacra})` : ''}`,
+            { sticky: true }
+          );
+
+          const popupHtml = `
+            <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
+              <div style="font-weight: 700; color: #0f172a; font-size: 14px;">🏘️ ${name}</div>
+              <div style="color: #64748b; font-size: 11px; margin-top: 2px;">${tipo}${chacra ? ` • ${chacra}` : ''}</div>
+              ${ordenanza ? `<div style="color: #0369a1; font-weight: 500; font-size: 11px; margin-top: 4px; background: #f0f9ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">📜 ${ordenanza}</div>` : ''}
+            </div>
+          `;
+          featureLayer.bindPopup(popupHtml);
+        },
+      });
+
+      layer.addTo(mapInstance);
+
+      // Traer la capa de trazas de calles al frente para no ocultar la arteria activa
+      if (geojsonLayerRef.current) {
+        geojsonLayerRef.current.bringToFront();
+      }
+
+      barriosLayerRef.current = layer;
+    }
+
+    updateBarriosLayer();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [mapInstance, showBarrios, barriosData, barrios]);
 
   // Controles HUD de navegación
   const handleZoomIn = useCallback(() => {
@@ -250,6 +417,21 @@ export default function StreetViewer({
           <span>🚲</span>
           <span className="hidden sm:inline">Ciclovías</span>
         </button>
+
+        {/* Conmutador de barrios HUD (FEAT-008) */}
+        <button
+          type="button"
+          onClick={() => setShowBarrios((v) => !v)}
+          className={`px-2.5 py-1.5 rounded-xl shadow-md border text-xs font-semibold flex items-center gap-1.5 transition-all backdrop-blur-md ${
+            showBarrios
+              ? 'bg-sky-600/95 text-white border-sky-700 shadow-sky-600/20'
+              : 'bg-white/95 text-slate-600 border-slate-200 hover:bg-slate-50'
+          }`}
+          title="Alternar capa interactiva de barrios y chacras"
+        >
+          <span>🏘️</span>
+          <span className="hidden sm:inline">Barrios</span>
+        </button>
       </div>
 
       {/* Píldora de referencia espacial Stitch (inferior izquierda) */}
@@ -272,6 +454,12 @@ export default function StreetViewer({
           <span className="w-3.5 h-1.5 bg-[#10b981] rounded-full"></span>
           <span className="text-slate-600 text-[11px]">Infraestructura ciclista</span>
         </div>
+        {showBarrios && (
+          <div className="flex items-center gap-2">
+            <span className="w-3.5 h-2 bg-[#38bdf8]/30 border border-[#0284c7] rounded-sm"></span>
+            <span className="text-slate-600 text-[11px]">Límites de barrio / chacra</span>
+          </div>
+        )}
       </div>
     </div>
   );

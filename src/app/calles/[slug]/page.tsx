@@ -51,6 +51,7 @@ export default async function StreetDetailPage(props: StreetPageProps) {
           hasCycleway={street.has_cycleway}
           cyclewayType={street.cycleway_type}
           tramos={street.tramos}
+          barrios={street.barrios}
           className="w-full h-full"
         />
       </div>

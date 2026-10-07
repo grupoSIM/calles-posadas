@@ -1,0 +1,497 @@
+[
+  {
+    "nombre_oficial": "Avenida Lucas Braulio Areco",
+    "nombre_normalizado": "avenida lucas braulio areco",
+    "numero_calle": 115,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Lucas Braulio Areco (1915-1994) fue un destacado músico, compositor, pintor y escritor misionero. Compuso 'Misionerita', instituida como canción oficial de la Provincia de Misiones.",
+    "categoria_toponimica": "CIENCIA_CULTURA"
+  },
+  {
+    "nombre_oficial": "Avenida Horacio Quiroga",
+    "nombre_normalizado": "avenida horacio quiroga",
+    "numero_calle": 54,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Horacio Quiroga (1878-1937), destacado cuentista y dramaturgo radicado en San Ignacio, maestro del relato breve y pionero de la narrativa de la selva misionera.",
+    "categoria_toponimica": "CIENCIA_CULTURA"
+  },
+  {
+    "nombre_oficial": "Avenida Almafuerte",
+    "nombre_normalizado": "avenida almafuerte",
+    "numero_calle": 20,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Seudónimo de Pedro Bonifacio Palacios (1854-1917), maestro, periodista y poeta argentino, exponente lírico del compromiso social y la educación popular.",
+    "categoria_toponimica": "CIENCIA_CULTURA"
+  },
+  {
+    "nombre_oficial": "Avenida Martin Fierro",
+    "nombre_normalizado": "avenida martin fierro",
+    "numero_calle": 78,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Obra cumbre de la literatura gauchesca argentina escrita en verso por José Hernández en 1872, símbolo de la identidad nacional.",
+    "categoria_toponimica": "CIENCIA_CULTURA"
+  },
+  {
+    "nombre_oficial": "Calle Felix de Azara",
+    "nombre_normalizado": "calle felix de azara",
+    "numero_calle": 37,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Félix de Azara (1742-1821), naturalista, militar y geógrafo ilustrado que realizó relevamientos cartográficos y biológicos pioneros en la región de Misiones.",
+    "categoria_toponimica": "CIENCIA_CULTURA"
+  },
+  {
+    "nombre_oficial": "Avenida Guillermo Marconi",
+    "nombre_normalizado": "avenida guillermo marconi",
+    "numero_calle": 23,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Guillermo Marconi (1874-1937), físico e ingeniero pionero de la radiotelegrafía a larga distancia, Premio Nobel de Física en 1909.",
+    "categoria_toponimica": "CIENCIA_CULTURA"
+  },
+  {
+    "nombre_oficial": "Avenida Bartolome Mitre",
+    "nombre_normalizado": "avenida bartolome mitre",
+    "numero_calle": 54,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Bartolomé Mitre (1821-1906), estadista, militar, historiador y presidente de la Nación Argentina entre 1862 y 1868, fundador del diario La Nación.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Justo Jose Urquiza",
+    "nombre_normalizado": "avenida justo jose urquiza",
+    "numero_calle": 26,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Justo José de Urquiza (1801-1870), militar y estadista, vencedor en la batalla de Caseros y primer presidente constitucional de la Confederación Argentina.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida General Juan Lavalle",
+    "nombre_normalizado": "avenida general juan lavalle",
+    "numero_calle": 59,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Juan Lavalle (1797-1841), general y militar patriota de destacada actuación en las guerras por la Independencia y en las campañas libertadoras sudamericanas.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Almirante Brown",
+    "nombre_normalizado": "avenida almirante brown",
+    "numero_calle": 70,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Guillermo Brown (1777-1857), primer almirante de la escuadra argentina, héroe naval de la Independencia y prócer de la Armada Argentina.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Mariano Moreno",
+    "nombre_normalizado": "avenida mariano moreno",
+    "numero_calle": 70,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Mariano Moreno (1778-1811), abogado, periodista e ideólogo de la Revolución de Mayo, secretario de la Primera Junta y fundador de la Gazeta de Buenos Ayres.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Monteagudo",
+    "nombre_normalizado": "avenida monteagudo",
+    "numero_calle": 94,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Bernardo de Monteagudo (1789-1825), abogado, militar y político revolucionario que colaboró cercanamente con San Martín y Bolívar en la gesta emancipadora.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Doctor Madariaga",
+    "nombre_normalizado": "avenida doctor madariaga",
+    "numero_calle": 42,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Juan Madariaga (1809-1879), médico y militar partícipe de las campañas libertadoras y la defensa de la autonomía federal en el litoral.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Roque Perez",
+    "nombre_normalizado": "avenida roque perez",
+    "numero_calle": 26,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "José Roque Pérez (1815-1871), abogado y filántropo, presidente de la Comisión Popular de Salubridad fallecido heroicamente combatiendo la epidemia de fiebre amarilla.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Roque Saenz Peña",
+    "nombre_normalizado": "avenida roque saenz pena",
+    "numero_calle": 25,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Roque Sáenz Peña (1851-1914), presidente argentino que consagró la Ley 8.871 de sufragio universal, secreto y obligatorio en 1912.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Leandro N. Alem",
+    "nombre_normalizado": "avenida leandro n. alem",
+    "numero_calle": 34,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Leandro N. Alem (1842-1896), dirigente político, abogado y parlamentario patriota, fundador y líder cívico de la Unión Cívica Radical.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Calle San Martin",
+    "nombre_normalizado": "calle san martin",
+    "numero_calle": 36,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "General José de San Martín (1778-1850), Padre de la Patria y Libertador de América, estratega del Cruce de los Andes y libertador de Argentina, Chile y Perú.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Calle Belgrano",
+    "nombre_normalizado": "calle belgrano",
+    "numero_calle": 30,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Manuel Belgrano (1770-1820), abogado, economista, vocal de la Primera Junta y general en jefe patriota, creador de la Bandera Nacional Argentina.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Calle Rivadavia",
+    "nombre_normalizado": "calle rivadavia",
+    "numero_calle": 33,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Bernardino Rivadavia (1780-1845), diplomático y estadista, primer presidente de las Provincias Unidas del Río de la Plata en 1826.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Calle Sarmiento",
+    "nombre_normalizado": "calle sarmiento",
+    "numero_calle": 34,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Domingo Faustino Sarmiento (1811-1888), prolífico escritor, pedagogo y presidente de la Nación (1868-1874), propulsor de la educación pública obligatoria.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Calle Bolivar",
+    "nombre_normalizado": "calle bolivar",
+    "numero_calle": 38,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Simón Bolívar (1783-1830), militar y político venezolano, figura trascendental de la emancipación hispanoamericana.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Calle Colon",
+    "nombre_normalizado": "calle colon",
+    "numero_calle": 39,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Cristóbal Colón (1451-1506), navegante y cartógrafo al servicio de la Corona española, comandante de la expedición transatlántica de 1492.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Brigadier General Jose Matias Zapiola",
+    "nombre_normalizado": "avenida brigadier general jose matias zapiola",
+    "numero_calle": 107,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "José Matías Zapiola (1780-1874), marino y militar argentino, fundador del Regimiento de Granaderos a Caballo junto a San Martín.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Las Heras",
+    "nombre_normalizado": "avenida las heras",
+    "numero_calle": 91,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Juan Gregorio de Las Heras (1780-1866), general patriota del Ejército de los Andes y gobernador de Buenos Aires, héroe del Cruce cordillerano.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Cmte Leonardo Rosales",
+    "nombre_normalizado": "avenida cmte leonardo rosales",
+    "numero_calle": 102,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Leonardo Rosales (1792-1836), coronel naval patriota con heroica actuación en los combates navales de la guerra de la Independencia y del Brasil.",
+    "categoria_toponimica": "PROCER"
+  },
+  {
+    "nombre_oficial": "Avenida Comandante Andresito",
+    "nombre_normalizado": "avenida comandante andresito",
+    "numero_calle": 110,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Andrés Guacurarí y Artigas (Andresito) (1778-1821), comandante general indígena guaraní de Misiones y héroe de la defensa del territorio provincial.",
+    "categoria_toponimica": "PUEBLOS_ORIGINARIOS"
+  },
+  {
+    "nombre_oficial": "Avenida Tambor de Tacuari",
+    "nombre_normalizado": "avenida tambor de tacuari",
+    "numero_calle": 48,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Pedro Ríos (1798-1811), el Tambor de Tacuarí, niño soldado correntino de estirpe guaraní que guió al ejército de Manuel Belgrano en Tacuarí hasta dar su vida.",
+    "categoria_toponimica": "PUEBLOS_ORIGINARIOS"
+  },
+  {
+    "nombre_oficial": "Avenida Corrientes",
+    "nombre_normalizado": "avenida corrientes",
+    "numero_calle": 51,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En homenaje a la provincia vecina de Corrientes, estrechamente ligada al origen, desarrollo territorial y poblamiento de Posadas.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Avenida Santa Cruz",
+    "nombre_normalizado": "avenida santa cruz",
+    "numero_calle": 118,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Homenaje a la provincia patagónica de Santa Cruz, componente soberano del sur de la República Argentina.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Avenida Santa Catalina",
+    "nombre_normalizado": "avenida santa catalina",
+    "numero_calle": 67,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Topónimo tradicional que evoca el paraje, cuenca hidrográfica y serranías de Santa Catalina al oeste del municipio de Posadas.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Avenida Tierra del Fuego",
+    "nombre_normalizado": "avenida tierra del fuego",
+    "numero_calle": 126,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En honor a la provincia austral de Tierra del Fuego, Antártida e Islas del Atlántico Sur.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Calle La Rioja",
+    "nombre_normalizado": "calle la rioja",
+    "numero_calle": 42,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Homenaje a la provincia de La Rioja, cuna de destacados caudillos y partícipe de las gestas federales argentinas.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Calle Cordoba",
+    "nombre_normalizado": "calle cordoba",
+    "numero_calle": 40,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En homenaje a la provincia mediterránea de Córdoba, polo científico, universitario y cultural argentino.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Calle Buenos Aires",
+    "nombre_normalizado": "calle buenos aires",
+    "numero_calle": 35,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En homenaje a la provincia y ciudad de Buenos Aires, histórica puerta de entrada al Río de la Plata.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Calle Santiago del Estero",
+    "nombre_normalizado": "calle santiago del estero",
+    "numero_calle": 52,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Homenaje a la provincia de Santiago del Estero, reconocida históricamente como madre de ciudades de la República Argentina.",
+    "categoria_toponimica": "GEOGRAFIA"
+  },
+  {
+    "nombre_oficial": "Avenida Centenario",
+    "nombre_normalizado": "avenida centenario",
+    "numero_calle": 40,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En conmemoración del primer Centenario de la Revolución de Mayo celebrado en 1910.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Avenida Chacabuco",
+    "nombre_normalizado": "avenida chacabuco",
+    "numero_calle": 86,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En honor a la Batalla de Chacabuco librada el 12 de febrero de 1817 por el Ejército de los Andes, hito clave de la libertad americana.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Avenida Ituzaingo",
+    "nombre_normalizado": "avenida ituzaingo",
+    "numero_calle": 94,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Homenaje a la Batalla de Ituzaingó librada el 20 de febrero de 1827, victoria militar de las tropas argentinas.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Avenida Maipu",
+    "nombre_normalizado": "avenida maipu",
+    "numero_calle": 86,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Conmemoración de la Batalla de Maipú librada el 5 de abril de 1818, victoria definitiva que aseguró la independencia de Chile.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Calle Junin",
+    "nombre_normalizado": "calle junin",
+    "numero_calle": 45,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Conmemoración de la Batalla de Junín del 6 de agosto de 1824, heroico triunfo de la caballería independentista en el Perú.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Calle Ayacucho",
+    "nombre_normalizado": "calle ayacucho",
+    "numero_calle": 43,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Conmemoración de la Batalla de Ayacucho del 9 de diciembre de 1824, gesta que selló la independencia sudamericana.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Calle San Lorenzo",
+    "nombre_normalizado": "calle san lorenzo",
+    "numero_calle": 41,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En homenaje al Combate de San Lorenzo del 3 de febrero de 1813, bautismo de fuego de los Granaderos de San Martín.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Calle 25 de Mayo",
+    "nombre_normalizado": "calle 25 de mayo",
+    "numero_calle": 29,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En conmemoración del 25 de Mayo de 1810, fecha patria que marca la conformación de la Primera Junta de Gobierno patrio.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Calle 3 de Febrero",
+    "nombre_normalizado": "calle 3 de febrero",
+    "numero_calle": 31,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Fecha conmemorativa del Combate de San Lorenzo (1813) y de la Batalla de Caseros (1852).",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Avenida 17 de Agosto",
+    "nombre_normalizado": "avenida 17 de agosto",
+    "numero_calle": 138,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "En homenaje al paso a la inmortalidad del Padre de la Patria, General José de San Martín, ocurrido el 17 de agosto de 1850.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Avenida Trincheras de San Jose",
+    "nombre_normalizado": "avenida trincheras de san jose",
+    "numero_calle": 62,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Nombre fundacional histórico de Posadas; alude a la muralla defensiva perimetral erigida en 1833 por orden de Gaspar Rodríguez de Francia.",
+    "categoria_toponimica": "FECHA_PATRIA"
+  },
+  {
+    "nombre_oficial": "Avenida Aguado",
+    "nombre_normalizado": "avenida aguado",
+    "numero_calle": 99,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Alejandro Aguado (1784-1842), mecenas y militar, gran amigo, protector y albacea testamentario del General José de San Martín.",
+    "categoria_toponimica": "BOTANICA_FAUNA"
+  },
+  {
+    "nombre_oficial": "Avenida Lopez y Planes",
+    "nombre_normalizado": "avenida lopez y planes",
+    "numero_calle": 54,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Vicente López y Planes (1785-1856), autor de la letra del Himno Nacional Argentino y presidente interino de las Provincias Unidas en 1827.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Blas Parera",
+    "nombre_normalizado": "avenida blas parera",
+    "numero_calle": 62,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Blas Parera (1776-1840), compositor musical hispano-argentino, autor de la música oficial del Himno Nacional Argentino.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Domingo Cabred",
+    "nombre_normalizado": "avenida domingo cabred",
+    "numero_calle": 78,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Domingo Cabred (1859-1929), eminente médico psiquiatra argentino pionero de la salud pública y el tratamiento asilar humanitario.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Francisco de Haro",
+    "nombre_normalizado": "avenida francisco de haro",
+    "numero_calle": 51,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Francisco de Haro (1870-1941), agrimensor territorial, docente y funcionario público pionero del Territorio Nacional de Misiones.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Morinigo Maria de la Cruz",
+    "nombre_normalizado": "avenida morinigo maria de la cruz",
+    "numero_calle": 62,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "María de la Cruz Moriñigo (1890-1974), benefactora y líder barrial comunitaria de Posadas, pionera en la contención de infancias a través del deporte.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Ricardo Bustamante",
+    "nombre_normalizado": "avenida ricardo bustamante",
+    "numero_calle": 102,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Ricardo Bustamante, agrimensor pionero de la Dirección de Tierras que realizó mensuras y delimitaciones catastrales de Misiones.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Padre Jose F. Rademacher",
+    "nombre_normalizado": "avenida padre jose f. rademacher",
+    "numero_calle": 37,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Padre José Fridolín Rademacher (1872-1943), sacerdote misionero del Verbo Divino, educador y párroco emblemático de Posadas.",
+    "categoria_toponimica": "OTRO"
+  },
+  {
+    "nombre_oficial": "Avenida Eva M. D. de Peron",
+    "nombre_normalizado": "avenida eva m. d. de peron",
+    "numero_calle": 147,
+    "referencia_ordenanza": "Ordenanza XVIII - N° 46",
+    "url_ordenanza": "https://digesto.hcdposadas.gob.ar/ver_ordenanza/774",
+    "explicacion": "Eva Duarte de Perón (1919-1952), lideresa política y social argentina, impulsora del sufragio femenino y de la Fundación Eva Perón.",
+    "categoria_toponimica": "OTRO"
+  }
+]

@@ -1,0 +1,239 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "manos_unicas.5",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6608613.51926174,
+              6972394.99715027
+            ],
+            [
+              6608153.3806888,
+              6969087.11458007
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 5,
+        "fid": 5,
+        "id": 5,
+        "NOMB_": "AV. FRANCISCO DE HARO",
+        "SENTIDO": "Norte - Sur",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.6",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6608890.84574315,
+              6969002.50123099
+            ],
+            [
+              6609338.97688019,
+              6972318.40249727
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 6,
+        "fid": 6,
+        "id": 6,
+        "NOMB_": "AV. RADEMACHER",
+        "SENTIDO": "Sur - Norte",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.1",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6603524.03801186,
+              6973844.97534586
+            ],
+            [
+              6608682.92904443,
+              6973170.92824897
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 1,
+        "fid": 1,
+        "id": 1,
+        "NOMB_": "AV. CENTENARIO",
+        "SENTIDO": "Oeste - Este",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.4",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6609643.78679773,
+              6971914.00788261
+            ],
+            [
+              6604118.1818467,
+              6972643.39850206
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 4,
+        "fid": 4,
+        "id": 4,
+        "NOMB_": "AV. BLAS PARERA",
+        "SENTIDO": "Este - Oeste",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.2",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6608634.48243502,
+              6972798.83137392
+            ],
+            [
+              6603478.95575032,
+              6973477.75677523
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 2,
+        "fid": 2,
+        "id": 2,
+        "NOMB_": "AV. TAMBOR DE TACUARÍ",
+        "SENTIDO": "Este - Oeste",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.3",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6603793.5222767,
+              6973063.10089955
+            ],
+            [
+              6608580.65286901,
+              6972429.42597717
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 3,
+        "fid": 3,
+        "id": 3,
+        "NOMB_": "AV. LÓPEZ Y PLANES",
+        "SENTIDO": "Oeste - Este",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.7",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6607786.60578531,
+              6969167.67120109
+            ],
+            [
+              6608433.51410601,
+              6973954.97610177
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 7,
+        "fid": 7,
+        "id": 7,
+        "NOMB_": "AV. LAVALLE",
+        "SENTIDO": "Sur - Norte",
+        "vigente": "SI"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "manos_unicas.8",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              6608057.61004015,
+              6973999.59395202
+            ],
+            [
+              6607417.93354569,
+              6969179.1573978
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geometry",
+      "properties": {
+        "fid_1": 8,
+        "fid": 8,
+        "id": 8,
+        "NOMB_": "AV. SANTA CATALINA",
+        "SENTIDO": "Norte - Sur",
+        "vigente": "SI"
+      }
+    }
+  ],
+  "totalFeatures": 8,
+  "numberMatched": 8,
+  "numberReturned": 8,
+  "timeStamp": "2026-10-07T17:19:08.215Z",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::5348"
+    }
+  }
+}

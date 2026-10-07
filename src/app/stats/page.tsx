@@ -167,8 +167,8 @@ export default function StatsPage() {
         </div>
       </div>
 
-      {/* Desglose por Tipo de Vía y Sentido de Circulación */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Desglose por Tipo de Vía, Sentido, Toponimia y Catastro */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Tipos de Vía */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
@@ -214,6 +214,42 @@ export default function StatsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Distribución Toponímica */}
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <h2 className="text-base font-bold text-slate-900 flex items-center space-x-2">
+            <span>🏛️</span>
+            <span>Categorías Toponímicas</span>
+          </h2>
+          <div className="space-y-3">
+            {stats.distribucion_toponimica.map((topo, idx) => {
+              const labelMap: Record<string, string> = {
+                PROCER: 'Próceres / Figuras Históricas',
+                PUEBLOS_ORIGINARIOS: 'Pueblos Originarios',
+                GEOGRAFIA: 'Geografía',
+                FECHA_PATRIA: 'Fechas Patrias',
+                BOTANICA_FAUNA: 'Flora y Fauna',
+                CIENCIA_CULTURA: 'Ciencia y Cultura',
+                OTRO: 'General / Otros'
+              };
+              const label = labelMap[topo.categoria] || topo.categoria;
+              return (
+                <div key={idx} className="space-y-1">
+                  <div className="flex justify-between text-xs font-medium text-slate-700">
+                    <span className="truncate pr-1" title={label}>{label}</span>
+                    <span className="whitespace-nowrap">{topo.cantidad.toLocaleString('es-AR')} ({topo.porcentaje}%)</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-2 rounded-full bg-amber-500"
+                      style={{ width: `${Math.max(1, topo.porcentaje)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

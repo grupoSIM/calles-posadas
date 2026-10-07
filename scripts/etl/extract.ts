@@ -31,6 +31,21 @@ export const LAYERS: LayerConfig[] = [
     name: 'avenidas',
     typeName: 'geonode:Avenidas_',
     filename: 'avenidas.json'
+  },
+  {
+    name: 'manos_unicas',
+    typeName: 'geonode:manos_unicas',
+    filename: 'manos_unicas.json'
+  },
+  {
+    name: 'barrios_normativa',
+    typeName: 'geonode:Barrios_Posadas1',
+    filename: 'barrios_normativa.json'
+  },
+  {
+    name: 'digesto_calles',
+    typeName: 'digesto:calles_posadas',
+    filename: 'digesto_calles.json'
   }
 ];
 
@@ -67,15 +82,15 @@ export async function extractLayers(options: { offline?: boolean; rawDir?: strin
     const rawFilePath = path.join(rawDir, layer.filename);
     const fixtureFilePath = path.join(fixturesDir, layer.filename);
 
-    if (options.offline) {
+    if (options.offline || layer.typeName.startsWith('digesto:')) {
       if (fs.existsSync(rawFilePath)) {
-        console.log(`[Offline] Cargando ${layer.name} desde datos raw locales (${rawFilePath})`);
+        console.log(`[${options.offline ? 'Offline' : 'Local'}] Cargando ${layer.name} desde datos raw locales (${rawFilePath})`);
         results[layer.name] = JSON.parse(fs.readFileSync(rawFilePath, 'utf-8'));
       } else if (fs.existsSync(fixtureFilePath)) {
-        console.log(`[Offline] Cargando ${layer.name} desde fixtures (${fixtureFilePath})`);
+        console.log(`[${options.offline ? 'Offline' : 'Local'}] Cargando ${layer.name} desde fixtures (${fixtureFilePath})`);
         results[layer.name] = JSON.parse(fs.readFileSync(fixtureFilePath, 'utf-8'));
       } else {
-        throw new Error(`Modo offline activo pero no se encontró ${layer.filename} en ${rawDir} ni en ${fixturesDir}`);
+        throw new Error(`No se encontró ${layer.filename} en ${rawDir} ni en ${fixturesDir}`);
       }
       continue;
     }
