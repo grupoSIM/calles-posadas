@@ -5,6 +5,7 @@ import {
   extractRoadType,
   generateSlug,
   toTitleCase,
+  areToponymVariants,
   transformBarrios,
   transformCalles
 } from '../scripts/etl/transform.js';
@@ -168,5 +169,100 @@ describe('T-003: Normalización toponímica y procesamiento espacial', () => {
     assert.equal(suiza.geojson.coordinates.length, 2, 'Geometría consolidada debe contener ambos trazos');
     const expectedSum = Math.round((suiza.tramos[0].longitudM + suiza.tramos[1].longitudM) * 100) / 100;
     assert.equal(suiza.longitudTotalM, expectedSum, 'Longitud total debe ser la suma de ambos tramos');
+  });
+
+  describe('FEAT-007: Consolidación toponímica de variantes y preservación por homonimia física', () => {
+    test('Detección y discriminación de variantes toponímicas (areToponymVariants)', () => {
+      // Variantes válidas del mismo nombre
+      assert.ok(areToponymVariants('Avenida Arq. Jorge Eduardo Vivanco', 'Avenida Arq. Vivanco'));
+      assert.ok(areToponymVariants('Calle Emilio Gottschalk', 'Calle E. Gottschalk'));
+      assert.ok(areToponymVariants('Calle Esteban S. Semilla', 'Calle Semilla'));
+      assert.ok(areToponymVariants('Calle Esteban Servando Semilla', 'Calle Esteban Semilla'));
+      assert.ok(areToponymVariants('Calle Jorge Newbery', 'Calle J. Newbery'));
+      assert.ok(areToponymVariants('Calle Maestro Salvador Catalano', 'Calle M. S. Catalano'));
+      assert.ok(areToponymVariants('Calle Agrim. Collado Ventura', 'Calle Ventura Collado'));
+
+      // Toponimias distintas sobre el mismo número que NO deben unificarse
+      assert.ok(!areToponymVariants('Calle Suiza', 'Calle Santa Ana'));
+      assert.ok(!areToponymVariants('Calle Suecia', 'Calle San Javier'));
+      assert.ok(!areToponymVariants('Calle Francisco Lesner', 'Calle Semilla'));
+      assert.ok(!areToponymVariants('Calle General Paz', 'Calle Maximo Paz'));
+      assert.ok(!areToponymVariants('Calle 143', 'Calle Maestro Salvador Catalano'));
+      assert.ok(!areToponymVariants('Avenida Eva M. D. de Peron', 'Avenida Isaco Abitbol'));
+
+      // Protección contra colisiones espurias por iniciales intermedias o calles s/n
+      assert.ok(!areToponymVariants('Calle Las Campanillas', 'Calle Victor C. Marchesini'));
+      assert.ok(!areToponymVariants('Calle Las Clavelinas', 'Calle Victor C. Marchesini'));
+      assert.ok(!areToponymVariants('Calle Guatambu', 'Calle Sgto. Ay. Ramon G. Acosta'));
+      assert.ok(!areToponymVariants('Calle Mocona', 'Calle Araos Pedro M.'));
+      assert.ok(!areToponymVariants('Calle Pasillo', 'Calle P. Morcillo'));
+      assert.ok(!areToponymVariants('Calle Neuquen', 'Calle S/N'));
+    });
+
+    test('AC-001 & AC-003: Consolidación de variantes de arterias y preservación de tramos (Avenida Vivanco N° 139)', () => {
+      const rawVivanco = {
+        features: [
+          {
+            type: 'Feature',
+            id: 'v1',
+            properties: { fid: 54, avenidas: 'AVENIDA ARQ. JORGE EDUARDO VIVANCO(139)', id: 139 },
+            geometry: {
+              type: 'LineString',
+              coordinates: [[-55.940, -27.350], [-55.940, -27.380]]
+            }
+          },
+          {
+            type: 'Feature',
+            id: 'v2',
+            properties: { fid: 99, avenidas: 'AVENIDA ARQ.VIVANCO(139)', id: 139 },
+            geometry: {
+              type: 'LineString',
+              coordinates: [[-55.940, -27.340], [-55.940, -27.350]]
+            }
+          }
+        ]
+      };
+
+      const calles = transformCalles({ features: [] }, [], { features: [] }, rawVivanco as any);
+      assert.equal(calles.length, 1, 'Debe fusionar las 2 variantes en 1 única avenida');
+      const vivanco = calles[0];
+      assert.equal(vivanco.nombreOficial, 'Avenida Arq. Jorge Eduardo Vivanco', 'Debe elegir el nombre oficial más completo');
+      assert.equal(vivanco.slug, 'avenida-arq-jorge-eduardo-vivanco-139');
+      assert.equal(vivanco.numeroCalle, 139);
+      assert.equal(vivanco.tipoVia, 'AVENIDA');
+      assert.equal(vivanco.tramos.length, 2, 'Debe registrar 2 tramos individuales');
+      assert.equal(vivanco.tramos[0].ordenTramo, 1);
+      assert.equal(vivanco.tramos[1].ordenTramo, 2);
+      assert.equal(vivanco.geojson.type, 'MultiLineString');
+      assert.equal(vivanco.geojson.coordinates.length, 2);
+    });
+
+    test('AC-002: Preservación de entidades distintas sobre el mismo número catastral (Calle Suiza vs Calle Santa Ana N° 98)', () => {
+      const rawFeatures = {
+        features: [
+          {
+            type: 'Feature',
+            id: 's1',
+            properties: { fid: 181, CALLE: 'CALLE SUIZA(98)', NUM_CALLE: '(98)' },
+            geometry: { type: 'LineString', coordinates: [[-55.900, -27.360], [-55.905, -27.365]] }
+          },
+          {
+            type: 'Feature',
+            id: 'sa1',
+            properties: { fid: 201, CALLE: 'CALLE SANTA ANA(98)', NUM_CALLE: '(98)' },
+            geometry: { type: 'LineString', coordinates: [[-55.910, -27.370], [-55.915, -27.375]] }
+          }
+        ]
+      };
+
+      const calles = transformCalles(rawFeatures as any, [], { features: [] });
+      assert.equal(calles.length, 2, 'Deben preservarse como 2 arterias independientes');
+      const suiza = calles.find(c => c.slug === 'calle-suiza-98');
+      const santaAna = calles.find(c => c.slug === 'calle-santa-ana-98');
+      assert.ok(suiza, 'Debe existir calle-suiza-98');
+      assert.ok(santaAna, 'Debe existir calle-santa-ana-98');
+      assert.equal(suiza?.nombreOficial, 'Calle Suiza');
+      assert.equal(santaAna?.nombreOficial, 'Calle Santa Ana');
+    });
   });
 });

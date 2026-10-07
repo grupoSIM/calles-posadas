@@ -144,6 +144,106 @@ export function extractRoadType(name: string): 'AVENIDA' | 'CALLE' | 'PASAJE' | 
   return 'CALLE';
 }
 
+export const TOPONYM_STOPWORDS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en', '1ra', '1ro', '2da', '2do', '3ra', '3ro']);
+
+export const TOPONYM_ABBREVIATIONS = new Map<string, string>([
+  ['arq', 'arquitecto'],
+  ['dr', 'doctor'],
+  ['dra', 'doctora'],
+  ['ing', 'ingeniero'],
+  ['prof', 'profesor'],
+  ['mstro', 'maestro'],
+  ['agrim', 'agrimensor'],
+  ['sgto', 'sargento'],
+  ['tte', 'teniente'],
+  ['cap', 'capitan'],
+  ['cmte', 'comandante'],
+  ['cte', 'comandante'],
+  ['gral', 'general'],
+  ['almte', 'almirante'],
+  ['gdor', 'gobernador'],
+  ['gob', 'gobernador'],
+  ['sto', 'subteniente'],
+  ['prol', 'prolongacion']
+]);
+
+export function getToponymTokens(name: string): string[] {
+  const core = name.replace(/^(Avenida|Calle|Pasaje|Diagonal|Costanera)\s+/i, '').trim();
+  return stripAccents(core).replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+}
+
+export function isNumericOrUnnamed(name: string): boolean {
+  const core = name.replace(/^(Avenida|Calle|Pasaje|Diagonal|Costanera)\s+/i, '').trim();
+  const clean = stripAccents(core).toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (clean.length === 0) return true;
+  if (/^\d+$/.test(clean)) return true;
+  if (clean === 'sinnombre' || clean === 'sn') return true;
+  if (core.toLowerCase().includes('sin nombre') || /\bs\s*\/\s*n\b/i.test(core) || /\bsn\b/i.test(core)) return true;
+  return false;
+}
+
+export function isTokenAbbreviation(shortTok: string, longTok: string): boolean {
+  if (shortTok === longTok) return true;
+  if (shortTok.length === 1 && longTok.length > 1 && longTok.startsWith(shortTok)) return true;
+  if (TOPONYM_ABBREVIATIONS.get(shortTok) === longTok) return true;
+  if (TOPONYM_ABBREVIATIONS.has(shortTok) && TOPONYM_ABBREVIATIONS.get(shortTok) === TOPONYM_ABBREVIATIONS.get(longTok)) return true;
+  return false;
+}
+
+export function isNameVariantOf(S: string[], L: string[]): boolean {
+  if (S.length > L.length) return false;
+  const usedL = new Set<number>();
+  let substantiveMatched = 0;
+
+  for (const s of S) {
+    if (TOPONYM_STOPWORDS.has(s)) continue;
+
+    let matchedIdx = -1;
+    for (let i = 0; i < L.length; i++) {
+      if (usedL.has(i)) continue;
+      const l = L[i];
+
+      if (isTokenAbbreviation(s, l)) {
+        matchedIdx = i;
+        if (s.length >= 3 && l.length >= 3 && s === l && !TOPONYM_ABBREVIATIONS.has(s) && !TOPONYM_STOPWORDS.has(s)) {
+          substantiveMatched++;
+        }
+        break;
+      }
+    }
+
+    if (matchedIdx === -1) {
+      return false;
+    }
+
+    usedL.add(matchedIdx);
+  }
+
+  return substantiveMatched > 0;
+}
+
+export function areToponymVariants(nameA: string, nameB: string): boolean {
+  if (isNumericOrUnnamed(nameA) || isNumericOrUnnamed(nameB)) return false;
+  const tA = getToponymTokens(nameA);
+  const tB = getToponymTokens(nameB);
+  if (tA.length === 0 || tB.length === 0) return false;
+
+  return isNameVariantOf(tA, tB) || isNameVariantOf(tB, tA);
+}
+
+export function getNameScore(name: string): number {
+  const core = name.replace(/^(Avenida|Calle|Pasaje|Diagonal|Costanera)\s+/i, '').trim();
+  const tokens = stripAccents(core).replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
+  let score = 0;
+  for (const t of tokens) {
+    if (TOPONYM_STOPWORDS.has(t)) continue;
+    if (t.length > 2) score += 10;
+    else if (t.length === 2) score += 5;
+    else score += 1;
+  }
+  return score * 1000 + name.length;
+}
+
 export function hasValidCoordinates(geom: any): boolean {
   if (!geom || !geom.coordinates || !Array.isArray(geom.coordinates)) return false;
   if (geom.coordinates.length === 0) return false;
@@ -257,11 +357,80 @@ export function transformCalles(
     group.features.push(feat);
   }
 
+  // Consolidación toponímica de variantes y abreviaturas por homonimia física (FEAT-007)
+  const groupsList: (FeatureGroup | null)[] = Array.from(groupsMap.values());
+
+  const byNumberAndType = new Map<string, number[]>();
+  for (let i = 0; i < groupsList.length; i++) {
+    const grp = groupsList[i]!;
+    if (grp.numeroCalle !== null) {
+      const pKey = `${grp.numeroCalle}|${grp.tipoVia}`;
+      if (!byNumberAndType.has(pKey)) byNumberAndType.set(pKey, []);
+      byNumberAndType.get(pKey)!.push(i);
+    }
+  }
+
+  for (const indices of byNumberAndType.values()) {
+    if (indices.length <= 1) continue;
+
+    const parent = indices.map((_, idx) => idx);
+    const find = (i: number): number => {
+      if (parent[i] === i) return i;
+      return (parent[i] = find(parent[i]));
+    };
+    const union = (i: number, j: number) => {
+      const rootI = find(i);
+      const rootJ = find(j);
+      if (rootI !== rootJ) parent[rootI] = rootJ;
+    };
+
+    for (let i = 0; i < indices.length; i++) {
+      for (let j = i + 1; j < indices.length; j++) {
+        if (areToponymVariants(groupsList[indices[i]]!.cleanName, groupsList[indices[j]]!.cleanName)) {
+          union(i, j);
+        }
+      }
+    }
+
+    const components = new Map<number, number[]>();
+    for (let i = 0; i < indices.length; i++) {
+      const root = find(i);
+      if (!components.has(root)) components.set(root, []);
+      components.get(root)!.push(indices[i]);
+    }
+
+    for (const memberIndices of components.values()) {
+      if (memberIndices.length <= 1) continue;
+
+      memberIndices.sort((a, b) => getNameScore(groupsList[b]!.cleanName) - getNameScore(groupsList[a]!.cleanName));
+      const canonical = groupsList[memberIndices[0]]!;
+      const allFeatures = memberIndices.flatMap(idx => groupsList[idx]!.features);
+
+      const primaryIdx = Math.min(...memberIndices);
+      groupsList[primaryIdx] = {
+        key: canonical.key,
+        cleanName: canonical.cleanName,
+        nombreNormalizado: canonical.nombreNormalizado,
+        numeroCalle: canonical.numeroCalle,
+        tipoVia: canonical.tipoVia,
+        features: allFeatures
+      };
+
+      for (const idx of memberIndices) {
+        if (idx !== primaryIdx) {
+          groupsList[idx] = null;
+        }
+      }
+    }
+  }
+
+  const finalGroups = groupsList.filter((g): g is FeatureGroup => g !== null);
+
   const usedSlugs = new Set<string>();
   const normalizedCalles: NormalizedCalle[] = [];
   let groupIndex = 0;
 
-  for (const group of groupsMap.values()) {
+  for (const group of finalGroups) {
     groupIndex++;
     let slug = generateSlug(group.cleanName, group.numeroCalle);
     // Garantizar unicidad de slug

@@ -10,14 +10,15 @@ Catálogo de incrementos de producto derivados del [PRD](../docs/prd.md) para el
 | FEAT-004 | Pantalla de métricas de cobertura y completitud del nomenclador (`/stats`) | Baja | FEAT-002 | [spec.md](feat-004/spec.md) | Verificada |
 | FEAT-005 | Rediseño visual responsivo del visor y optimización espacial con Stitch | Media | FEAT-003 | [spec.md](feat-005/spec.md) | Verificada |
 | FEAT-006 | Saneamiento toponímico, desduplicación y consolidación de tramos en ETL | Alta | FEAT-001 | [spec.md](feat-006/spec.md) | Verificada |
+| FEAT-007 | Consolidación toponímica de variantes y abreviaturas viales por homonimia física | Media | FEAT-006 | [spec.md](feat-007/spec.md) | Verificada |
 
 ## Trabajo activo y siguiente acción
 
-- **Última feature completada:** `FEAT-006` (Saneamiento toponímico, desduplicación y consolidación de tramos en ETL).
-- **Feature activa:** Ninguna (todas las features aprobadas del catálogo están verificadas).
-- **Responsable:** Ninguno.
+- **Última feature completada:** `FEAT-007` (Consolidación toponímica de variantes y abreviaturas viales por homonimia física).
+- **Feature activa:** Ninguna.
+- **Responsable:** Leader / Analyst.
 - **Bloqueo:** Ninguno.
-- **Siguiente acción:** Esperar priorización de nuevos incrementos o instrucciones del usuario.
+- **Siguiente acción:** Proponer siguiente feature del roadmap o esperar nuevas directivas de producto.
 
 ## Publicación
 
