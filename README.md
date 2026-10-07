@@ -88,6 +88,7 @@ El desarrollo del MVP se gestionó mediante el arnés SDD liviano, con especific
 | [FEAT-003](specs/feat-003/spec.md) | Visor cartográfico interactivo y maquetación de fichas en Leaflet | Verificada |
 | [FEAT-004](specs/feat-004/spec.md) | Pantalla de métricas de cobertura y completitud del nomenclador (`/stats`) | Verificada |
 | [FEAT-005](specs/feat-005/spec.md) | Rediseño visual responsivo del visor y optimización espacial con Stitch | Verificada |
+| [FEAT-006](specs/feat-006/spec.md) | Saneamiento toponímico, desduplicación y consolidación de tramos en ETL | Verificada |
 
 Para más detalles consultar:
 - [Catálogo de Specs](specs/index.md)

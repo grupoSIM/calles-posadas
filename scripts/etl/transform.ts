@@ -123,8 +123,8 @@ export function extractStreetNumber(rawName: string, numCalleProp?: string): num
   }
 
   if (rawName) {
-    // Buscar patrones como (115), N° 115, o " 115"
-    const parenMatch = rawName.match(/\((\d+)\)/);
+    // Buscar patrones como (115), (77B), N° 115, o " 115"
+    const parenMatch = rawName.match(/\((\d+)/);
     if (parenMatch) return parseInt(parenMatch[1], 10);
 
     const numMatch = rawName.match(/(?:calle|av\.?|avenida|pje\.?|pasaje|diagonal)\s+(\d+)\b/i);
@@ -204,30 +204,66 @@ export function transformCalles(
   // Filtrar con geometría válida
   const validCalles = allFeatures.filter(f => hasValidCoordinates(f.geometry));
 
-  // Agrupar o normalizar por nombre oficial
-  const usedSlugs = new Set<string>();
+  // Agrupar features por clave canónica (nombre normalizado + número de calle)
+  interface FeatureGroup {
+    key: string;
+    cleanName: string;
+    nombreNormalizado: string;
+    numeroCalle: number | null;
+    tipoVia: 'AVENIDA' | 'CALLE' | 'PASAJE' | 'DIAGONAL' | 'COSTANERA';
+    features: RawCalleFeature[];
+  }
 
-  return validCalles.map((feat, index) => {
+  const groupsMap = new Map<string, FeatureGroup>();
+
+  for (const feat of validCalles) {
     const rawCalle = feat.properties?.CALLE || feat.properties?.avenidas || feat.properties?.AVENIDAS || '';
     const rawNumCalle = feat.properties?.NUM_CALLE || (feat.properties?.id ? `(${feat.properties.id})` : '');
 
     const numeroCalle = extractStreetNumber(rawCalle, rawNumCalle);
     const tipoVia = extractRoadType(rawCalle);
 
-    // Limpiar nombre: remover "(49)", prefijos redundantes
+    // Limpiar nombre: separar prefijos pegados, remover códigos parentizados, prefijos redundantes y normalizar puntos
     let cleanName = rawCalle
-      .replace(/\(\d+\)/g, '')
-      .replace(/^(CALLE|AVENIDA|AV\.?|ANENIDA|PASAJE|PJE\.?|DIAGONAL|COSTANERA)\s+/i, '')
+      .replace(/^(CALLE|AVENIDA|ANENIDA|PASAJE|DIAGONAL|COSTANERA)(?=[A-Za-z])/i, '$1 ')
+      .replace(/\([^)]*\)?/g, ' ')
+      .replace(/^((CALLE|AVENIDA|AV\b\.?|ANENIDA|PASAJE|PJE\b\.?|DIAGONAL|COSTANERA)(\s+|$))+/i, '')
+      .replace(/\.([a-zA-Z])/g, '. $1')
       .trim();
 
-    if (!cleanName && numeroCalle) {
-      cleanName = `${tipoVia === 'AVENIDA' ? 'Avenida' : tipoVia === 'PASAJE' ? 'Pasaje' : 'Calle'} ${numeroCalle}`;
+    const prefix = tipoVia === 'AVENIDA' ? 'Avenida' : tipoVia === 'PASAJE' ? 'Pasaje' : tipoVia === 'DIAGONAL' ? 'Diagonal' : tipoVia === 'COSTANERA' ? 'Costanera' : 'Calle';
+
+    if (!cleanName) {
+      cleanName = numeroCalle ? `${prefix} ${numeroCalle}` : `${prefix} Sin Nombre`;
     } else {
-      const prefix = tipoVia === 'AVENIDA' ? 'Avenida' : tipoVia === 'PASAJE' ? 'Pasaje' : tipoVia === 'DIAGONAL' ? 'Diagonal' : tipoVia === 'COSTANERA' ? 'Costanera' : 'Calle';
       cleanName = `${prefix} ${toTitleCase(cleanName)}`;
     }
 
-    let slug = generateSlug(cleanName, numeroCalle);
+    const nombreNormalizado = stripAccents(cleanName);
+    const key = `${nombreNormalizado}|${numeroCalle ?? ''}`;
+
+    let group = groupsMap.get(key);
+    if (!group) {
+      group = {
+        key,
+        cleanName,
+        nombreNormalizado,
+        numeroCalle,
+        tipoVia,
+        features: []
+      };
+      groupsMap.set(key, group);
+    }
+    group.features.push(feat);
+  }
+
+  const usedSlugs = new Set<string>();
+  const normalizedCalles: NormalizedCalle[] = [];
+  let groupIndex = 0;
+
+  for (const group of groupsMap.values()) {
+    groupIndex++;
+    let slug = generateSlug(group.cleanName, group.numeroCalle);
     // Garantizar unicidad de slug
     if (usedSlugs.has(slug)) {
       let counter = 2;
@@ -238,111 +274,123 @@ export function transformCalles(
     }
     usedSlugs.add(slug);
 
-    // Longitud geométrica con turf
-    let longitudTotalM = 0;
-    try {
-      longitudTotalM = Math.round(turf.length(feat as any, { units: 'meters' }) * 100) / 100;
-    } catch {
-      longitudTotalM = 0;
-    }
-
-    const bboxRaw = turf.bbox(feat as any);
-    const bbox: [number, number, number, number] = [bboxRaw[0], bboxRaw[1], bboxRaw[2], bboxRaw[3]];
-
-    // Cruce espacial con ciclovías: chequear si interseca o está a < 30m de alguna ciclovía
-    let tieneCiclovia = false;
-    let tipoCiclovia: string | null = null;
-
-    for (const bici of bicisendaFeatures) {
-      try {
-        const biciBbox = turf.bbox(bici as any);
-        // Descarte rápido por Bounding Box
-        if (
-          bbox[0] > biciBbox[2] ||
-          bbox[2] < biciBbox[0] ||
-          bbox[1] > biciBbox[3] ||
-          bbox[3] < biciBbox[1]
-        ) {
-          continue;
-        }
-
-        // Bbox se solapa, verificar intersección espacial
-        if (turf.booleanIntersects(feat as any, bici as any)) {
-          tieneCiclovia = true;
-          tipoCiclovia = bici.properties?.Nombre || 'CICLOVIA';
-          break;
-        }
-      } catch {
-        // En caso de fallo geométrico aislado, continuar
-      }
-    }
-
-    // Cruce espacial con barrios para asociar tramos y relaciones
     const barrioIds = new Set<number>();
     const tramos: NormalizedTramo[] = [];
+    const allLines: any[] = [];
+    let groupTipoCiclovia: string | null = null;
 
-    // Tomar centroide o punto medio del tramo para asignación precisa de barrio
-    let puntoCalle: any = null;
-    try {
-      puntoCalle = turf.pointOnFeature(feat as any);
-    } catch {
-      puntoCalle = null;
-    }
+    for (let fIdx = 0; fIdx < group.features.length; fIdx++) {
+      const feat = group.features[fIdx];
+      let longitudM = 0;
+      try {
+        longitudM = Math.round(turf.length(feat as any, { units: 'meters' }) * 100) / 100;
+      } catch {
+        longitudM = 0;
+      }
 
-    let barrioAsignado: NormalizedBarrio | null = null;
-    if (puntoCalle) {
-      for (let bIndex = 0; bIndex < barrios.length; bIndex++) {
-        const b = barrios[bIndex];
-        // Filtro rápido Bbox
-        if (
-          puntoCalle.geometry.coordinates[0] >= b.bbox[0] &&
-          puntoCalle.geometry.coordinates[0] <= b.bbox[2] &&
-          puntoCalle.geometry.coordinates[1] >= b.bbox[1] &&
-          puntoCalle.geometry.coordinates[1] <= b.bbox[3]
-        ) {
-          try {
-            if (turf.booleanPointInPolygon(puntoCalle, { type: 'Feature', geometry: b.geojson, properties: {} })) {
-              barrioAsignado = b;
-              barrioIds.add(bIndex + 1);
-              break;
+      // Consolidar coordenadas en MultiLineString
+      if (feat.geometry.type === 'LineString') {
+        allLines.push(feat.geometry.coordinates);
+      } else if (feat.geometry.type === 'MultiLineString') {
+        allLines.push(...feat.geometry.coordinates);
+      }
+
+      const featBboxRaw = turf.bbox(feat as any);
+      let tieneCiclovia = false;
+      for (const bici of bicisendaFeatures) {
+        try {
+          const biciBbox = turf.bbox(bici as any);
+          if (
+            featBboxRaw[0] > biciBbox[2] ||
+            featBboxRaw[2] < biciBbox[0] ||
+            featBboxRaw[1] > biciBbox[3] ||
+            featBboxRaw[3] < biciBbox[1]
+          ) {
+            continue;
+          }
+
+          if (turf.booleanIntersects(feat as any, bici as any)) {
+            tieneCiclovia = true;
+            if (!groupTipoCiclovia) {
+              groupTipoCiclovia = bici.properties?.Nombre || 'CICLOVIA';
             }
-          } catch {
-            // Ignorar errores puntuales de polígono
+            break;
+          }
+        } catch {}
+      }
+
+      // Cruce espacial con barrios para asociar tramos
+      let puntoCalle: any = null;
+      try {
+        puntoCalle = turf.pointOnFeature(feat as any);
+      } catch {
+        puntoCalle = null;
+      }
+
+      let barrioAsignado: NormalizedBarrio | null = null;
+      if (puntoCalle) {
+        for (let bIndex = 0; bIndex < barrios.length; bIndex++) {
+          const b = barrios[bIndex];
+          if (
+            puntoCalle.geometry.coordinates[0] >= b.bbox[0] &&
+            puntoCalle.geometry.coordinates[0] <= b.bbox[2] &&
+            puntoCalle.geometry.coordinates[1] >= b.bbox[1] &&
+            puntoCalle.geometry.coordinates[1] <= b.bbox[3]
+          ) {
+            try {
+              if (turf.booleanPointInPolygon(puntoCalle, { type: 'Feature', geometry: b.geojson, properties: {} })) {
+                barrioAsignado = b;
+                barrioIds.add(bIndex + 1);
+                break;
+              }
+            } catch {}
           }
         }
       }
+
+      tramos.push({
+        ordenTramo: fIdx + 1,
+        alturaInicio: null,
+        alturaFin: null,
+        barrioOriginalId: barrioAsignado?.originalId || null,
+        numeroChacra: barrioAsignado?.numeroChacra || null,
+        tieneCiclovia,
+        longitudM,
+        geojson: feat.geometry
+      });
     }
 
-    tramos.push({
-      ordenTramo: 1,
-      alturaInicio: null,
-      alturaFin: null,
-      barrioOriginalId: barrioAsignado?.originalId || null,
-      numeroChacra: barrioAsignado?.numeroChacra || null,
-      tieneCiclovia,
-      longitudM: longitudTotalM,
-      geojson: feat.geometry
-    });
+    const consolidatedGeometry = {
+      type: 'MultiLineString',
+      coordinates: allLines
+    };
 
-    return {
-      originalId: feat.id || `calle-${index + 1}`,
+    const bboxRaw = turf.bbox({ type: 'Feature', geometry: consolidatedGeometry, properties: {} } as any);
+    const bbox: [number, number, number, number] = [bboxRaw[0], bboxRaw[1], bboxRaw[2], bboxRaw[3]];
+    const longitudTotalM = Math.round(tramos.reduce((acc, t) => acc + t.longitudM, 0) * 100) / 100;
+    const tieneCicloviaCalle = tramos.some(t => t.tieneCiclovia);
+
+    normalizedCalles.push({
+      originalId: group.features[0].id || `calle-${groupIndex}`,
       slug,
-      nombreOficial: cleanName,
-      nombreNormalizado: stripAccents(cleanName),
-      numeroCalle,
-      tipoVia,
+      nombreOficial: group.cleanName,
+      nombreNormalizado: group.nombreNormalizado,
+      numeroCalle: group.numeroCalle,
+      tipoVia: group.tipoVia,
       sentidoCirculacion: 'DOBLE',
       longitudTotalM,
-      tieneCiclovia,
-      tipoCiclovia,
+      tieneCiclovia: tieneCicloviaCalle,
+      tipoCiclovia: tieneCicloviaCalle ? (groupTipoCiclovia || 'CICLOVIA') : null,
       explicacion: null,
       referenciaOrdenanza: null,
       urlOrdenanza: null,
       categoriaToponimica: 'OTRO',
       bbox,
-      geojson: feat.geometry,
+      geojson: consolidatedGeometry,
       barrioIds,
       tramos
-    };
-  });
+    });
+  }
+
+  return normalizedCalles;
 }

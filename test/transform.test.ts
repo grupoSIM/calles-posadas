@@ -86,4 +86,87 @@ describe('T-003: Normalización toponímica y procesamiento espacial', () => {
     assert.equal(calles[0].slug, 'calle-jujuy-49');
     assert.ok(calles[0].bbox[0] <= calles[0].bbox[2], 'minX <= maxX');
   });
+
+  test('T-001: Saneamiento toponímico sin duplicación de prefijos (AVENIDA(171), AVENIDA(77B), AVENIDA)', () => {
+    const rawFeatures = {
+      features: [
+        {
+          type: 'Feature',
+          id: 'av1',
+          properties: { fid: 1, CALLE: 'AVENIDA(171)', NUM_CALLE: '' },
+          geometry: { type: 'LineString', coordinates: [[-55.90, -27.36], [-55.91, -27.37]] }
+        },
+        {
+          type: 'Feature',
+          id: 'av2',
+          properties: { fid: 2, CALLE: 'AVENIDA(77B)', NUM_CALLE: '' },
+          geometry: { type: 'LineString', coordinates: [[-55.91, -27.37], [-55.92, -27.38]] }
+        },
+        {
+          type: 'Feature',
+          id: 'av3',
+          properties: { fid: 3, CALLE: 'AVENIDA', NUM_CALLE: '' },
+          geometry: { type: 'LineString', coordinates: [[-55.92, -27.38], [-55.93, -27.39]] }
+        }
+      ]
+    };
+
+    const calles = transformCalles(rawFeatures as any, [], { features: [] });
+    assert.equal(calles.length, 3);
+    assert.equal(calles[0].nombreOficial, 'Avenida 171');
+    assert.equal(calles[0].slug, 'avenida-171');
+    assert.equal(calles[0].numeroCalle, 171);
+
+    assert.equal(calles[1].nombreOficial, 'Avenida 77');
+    assert.equal(calles[1].slug, 'avenida-77');
+    assert.equal(calles[1].numeroCalle, 77);
+
+    assert.equal(calles[2].nombreOficial, 'Avenida Sin Nombre');
+    assert.equal(calles[2].slug, 'avenida-sin-nombre');
+    assert.equal(calles[2].numeroCalle, null);
+
+    for (const c of calles) {
+      assert.ok(!c.nombreOficial.includes('Avenida Avenida'), 'No debe duplicar prefijo Avenida');
+      assert.ok(!c.nombreOficial.includes('Calle Calle'), 'No debe duplicar prefijo Calle');
+    }
+  });
+
+  test('T-002: Consolidación multi-segmento de arterias (caso Calle Suiza N° 98)', () => {
+    const rawSuiza = {
+      features: [
+        {
+          type: 'Feature',
+          id: 's1',
+          properties: { fid: 181, CALLE: 'CALLE SUIZA(98)', NUM_CALLE: '(98)' },
+          geometry: {
+            type: 'MultiLineString',
+            coordinates: [[[-55.900, -27.360], [-55.905, -27.365]]]
+          }
+        },
+        {
+          type: 'Feature',
+          id: 's2',
+          properties: { fid: 188, CALLE: 'CALLE SUIZA(98)', NUM_CALLE: '(98)' },
+          geometry: {
+            type: 'MultiLineString',
+            coordinates: [[[-55.905, -27.365], [-55.908, -27.368]]]
+          }
+        }
+      ]
+    };
+
+    const calles = transformCalles(rawSuiza as any, [], { features: [] });
+    assert.equal(calles.length, 1, 'Debe consolidar ambos segmentos en 1 único registro');
+    const suiza = calles[0];
+    assert.equal(suiza.slug, 'calle-suiza-98');
+    assert.equal(suiza.nombreOficial, 'Calle Suiza');
+    assert.equal(suiza.numeroCalle, 98);
+    assert.equal(suiza.tramos.length, 2, 'Debe registrar 2 tramos individuales');
+    assert.equal(suiza.tramos[0].ordenTramo, 1);
+    assert.equal(suiza.tramos[1].ordenTramo, 2);
+    assert.equal(suiza.geojson.type, 'MultiLineString');
+    assert.equal(suiza.geojson.coordinates.length, 2, 'Geometría consolidada debe contener ambos trazos');
+    const expectedSum = Math.round((suiza.tramos[0].longitudM + suiza.tramos[1].longitudM) * 100) / 100;
+    assert.equal(suiza.longitudTotalM, expectedSum, 'Longitud total debe ser la suma de ambos tramos');
+  });
 });
