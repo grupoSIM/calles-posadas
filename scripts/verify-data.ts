@@ -31,15 +31,17 @@ export function verifyData(dbPath?: string): { success: boolean; details: any } 
     throw new Error(`Fallo de integridad: ${callesSinGeo} calles tienen geometría nula.`);
   }
 
-  // 3. Probar búsqueda FTS5 de texto y velocidad
-  const t0 = performance.now();
-  const ftsTest = db.prepare(`
+  // 3. Probar búsqueda FTS5 de texto y velocidad (con warm-up para evitar latencia espuria en CI)
+  const stmtFts = db.prepare(`
     SELECT c.id, c.nombre_oficial, c.slug, c.numero_calle
     FROM calles_fts f
     JOIN calles c ON c.id = f.rowid
     WHERE calles_fts MATCH 'Jujuy*'
     LIMIT 5
-  `).all() as any[];
+  `);
+  stmtFts.all(); // warm-up inicial
+  const t0 = performance.now();
+  const ftsTest = stmtFts.all() as any[];
   const ftsTimeMs = performance.now() - t0;
 
   console.log(`- Test FTS5 ("Jujuy*"): ${ftsTest.length} resultados en ${ftsTimeMs.toFixed(3)} ms`);
@@ -58,15 +60,17 @@ export function verifyData(dbPath?: string): { success: boolean; details: any } 
   console.log(`- Test FTS5 ("49"): ${ftsNumTest.length} resultados`);
 
   // 4. Probar consulta espacial R*Tree (Viewport de Posadas Centro: aprox [-55.91, -55.88] x [-27.38, -27.35])
-  const t1 = performance.now();
-  const rtreeTest = db.prepare(`
+  const stmtRtree = db.prepare(`
     SELECT c.id, c.nombre_oficial
     FROM calles_rtree r
     JOIN calles c ON c.id = r.id
     WHERE r.min_x >= -55.95 AND r.max_x <= -55.85
       AND r.min_y >= -27.42 AND r.max_y <= -27.34
     LIMIT 10
-  `).all() as any[];
+  `);
+  stmtRtree.all(); // warm-up inicial
+  const t1 = performance.now();
+  const rtreeTest = stmtRtree.all() as any[];
   const rtreeTimeMs = performance.now() - t1;
 
   console.log(`- Test R*Tree (Bbox Centro): ${rtreeTest.length} calles encontradas en ${rtreeTimeMs.toFixed(3)} ms`);
