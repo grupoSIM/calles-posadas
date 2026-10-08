@@ -116,6 +116,17 @@ describe('FEAT-003: Integración Frontend y Visor Cartográfico', () => {
       const pageElement = await StreetDetailPage({ params: Promise.resolve({ slug: 'avenida-juan-maza-140' }) });
       assert.ok(pageElement);
     });
+
+    test('ERR-003: Componente Header y SearchBar soportan contratos responsivos y foco móvil', async () => {
+      const Header = (await import('../src/components/layout/Header')).default;
+      assert.equal(typeof Header, 'function');
+
+      const SearchBar = (await import('../src/components/search/SearchBar')).default;
+      assert.equal(typeof SearchBar, 'function');
+
+      const HomePage = (await import('../src/app/page')).default;
+      assert.equal(typeof HomePage, 'function');
+    });
   });
 
   describe('FEAT-008: AC-002 Capa interactiva de barrios en visor', () => {

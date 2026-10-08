@@ -16,15 +16,15 @@ Catálogo de incrementos de producto derivados del [PRD](../docs/prd.md) para el
 
 ## Trabajo activo y siguiente acción
 
-- **Feature actual:** FEAT-008 y FEAT-009 (correcciones ERR-001 verificadas y cerradas favorablemente).
-- **Estado:** Verificadas.
+- **Feature actual:** FEAT-005 (corrección ERR-003 verificada favorablemente por revisor independiente).
+- **Estado:** Verificada.
 - **Responsable:** Leader.
 - **Bloqueo:** Ninguno.
-- **Siguiente acción:** Ciclo de correcciones completado; catálogo íntegro verificado. Esperar nuevas instrucciones del usuario.
+- **Siguiente acción:** Ciclo de corrección móvil cerrado con evidencia visual y tests en verde. Esperar nuevas instrucciones del usuario.
 
 ## Publicación
 
-Autorizada por el usuario el 2026-10-07 para sincronización, commit y push al repositorio remoto principal (`origin/main`). Despliegue en producción o entornos VPS sujeto a confirmación independiente.
+Autorizada por el usuario el 2026-10-08 para sincronización, commit y push al repositorio remoto principal (`origin/main`). Despliegue en producción o entornos VPS sujeto a confirmación independiente.
 
 ## Aplicación del harness actualizado
 

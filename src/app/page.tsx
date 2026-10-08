@@ -7,7 +7,7 @@ import StreetDetailCard from '@/components/street/StreetDetailCard';
 import StreetViewerClient from '@/components/map/StreetViewerClient';
 import type { CalleSummary, CalleDetail } from '@/lib/db/streets';
 
-type MobileSheetState = 'peek' | 'half' | 'full';
+type MobileSheetState = 'hidden' | 'peek' | 'half' | 'full';
 
 export default function HomePage() {
   const [query, setQuery] = useState('');
@@ -27,7 +27,7 @@ export default function HomePage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   // Control de bottom sheet móvil con 3 estados
-  const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>('half');
+  const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>('peek');
 
   // Carga de catálogo de calles
   const fetchStreets = useCallback(async () => {
@@ -93,21 +93,24 @@ export default function HomePage() {
     setSelectedDetail(null);
   };
 
-  // Alternar estados móviles cíclicamente o por acción
+  // Alternar estados móviles
   const toggleMobileSheet = () => {
     setMobileSheetState((prev) => {
       if (prev === 'peek') return 'half';
       if (prev === 'half') return 'full';
-      return 'peek';
+      if (prev === 'full') return 'peek';
+      return 'half';
     });
   };
 
   const mobileHeightClass =
-    mobileSheetState === 'peek'
-      ? 'h-[76px]'
+    mobileSheetState === 'hidden'
+      ? 'translate-y-full md:translate-y-0 h-0 md:h-full pointer-events-none md:pointer-events-auto'
+      : mobileSheetState === 'peek'
+      ? 'h-[125px] max-h-[125px]'
       : mobileSheetState === 'half'
-      ? 'h-[50vh]'
-      : 'h-[90vh]';
+      ? 'h-[50dvh] max-h-[50dvh]'
+      : 'h-[88dvh] max-h-[88dvh]';
 
   return (
     <div className="flex-1 flex flex-col md:flex-row w-full h-full min-h-0 overflow-hidden relative">
@@ -119,27 +122,70 @@ export default function HomePage() {
           fixed md:relative inset-x-0 bottom-0 md:bottom-auto md:h-full
           ${mobileHeightClass} md:max-h-full
           shadow-xl md:shadow-none rounded-t-2xl md:rounded-none
+          pb-[env(safe-area-inset-bottom,0px)]
         `}
       >
         {/* Agarradera / Barra de control móvil */}
-        <div
-          onClick={toggleMobileSheet}
-          className="md:hidden flex flex-col items-center justify-center py-2 px-4 bg-slate-50 border-b border-slate-200/80 cursor-pointer rounded-t-2xl select-none"
-        >
-          <div className="w-10 h-1.5 bg-slate-300 rounded-full mb-1.5" />
-          <div className="w-full flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-700 truncate max-w-[240px]">
+        <div className="md:hidden flex flex-col items-center justify-center pt-2 pb-1.5 px-3 bg-slate-50 border-b border-slate-200/80 rounded-t-2xl select-none flex-shrink-0">
+          <div
+            onClick={toggleMobileSheet}
+            className="w-10 h-1.5 bg-slate-300 hover:bg-slate-400 rounded-full mb-1 cursor-pointer"
+            title="Deslizar o alternar panel"
+          />
+          <div className="w-full flex items-center justify-between text-xs gap-1">
+            <span
+              onClick={toggleMobileSheet}
+              className="font-semibold text-slate-700 truncate cursor-pointer flex-1"
+            >
               {selectedDetail
                 ? `📍 ${selectedDetail.official_name}`
                 : `🔍 Catálogo (${total} arterias)`}
             </span>
-            <span className="text-[11px] font-medium text-posadas-riverDark bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
-              {mobileSheetState === 'peek'
-                ? 'Expandir ↑'
-                : mobileSheetState === 'half'
-                ? 'Completo ↑'
-                : 'Minimizar ↓'}
-            </span>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {mobileSheetState === 'peek' ? (
+                <button
+                  type="button"
+                  onClick={() => setMobileSheetState('half')}
+                  className="text-[11px] font-medium text-posadas-riverDark bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200"
+                >
+                  Expandir ↑
+                </button>
+              ) : mobileSheetState === 'half' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheetState('full')}
+                    className="text-[11px] font-medium text-posadas-riverDark bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200"
+                  >
+                    Completo ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheetState('peek')}
+                    className="text-[11px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-full border border-slate-200"
+                  >
+                    Minimizar ↓
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMobileSheetState('half')}
+                  className="text-[11px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-full border border-slate-200"
+                >
+                  Reducir ↓
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setMobileSheetState('hidden')}
+                className="text-[11px] text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 p-0.5 px-1.5 rounded"
+                title="Ocultar para ver mapa completo"
+                aria-label="Ocultar panel"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         </div>
 
@@ -177,8 +223,16 @@ export default function HomePage() {
           /* Vista de Catálogo y Búsqueda */
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Cabecera de filtros y búsqueda */}
-            <div className="p-3.5 border-b border-slate-100 space-y-2.5 bg-slate-50/60">
-              <SearchBar value={query} onChange={handleQueryChange} />
+            <div className="p-3 border-b border-slate-100 space-y-2 bg-slate-50/60 flex-shrink-0">
+              <SearchBar
+                value={query}
+                onChange={handleQueryChange}
+                onFocus={() => {
+                  if (mobileSheetState === 'peek') {
+                    setMobileSheetState('half');
+                  }
+                }}
+              />
               <FilterBar filters={filters} onChange={handleFiltersChange} />
               <div className="flex justify-between items-center text-[11px] text-slate-500 pt-0.5 px-0.5">
                 <span className="font-medium text-slate-600">
@@ -294,6 +348,25 @@ export default function HomePage() {
           />
         </div>
       </div>
+
+      {/* Botón flotante móvil para recuperar búsqueda si el drawer está oculto */}
+      {mobileSheetState === 'hidden' && (
+        <button
+          type="button"
+          onClick={() => setMobileSheetState('half')}
+          className="md:hidden fixed bottom-5 left-4 z-30 inline-flex items-center gap-2 bg-posadas-midnight text-white px-4 py-2.5 rounded-full shadow-xl border border-slate-700/80 text-xs font-semibold hover:bg-slate-800 transition-all active:scale-95 animate-in fade-in duration-200"
+        >
+          <span>🔍</span>
+          <span className="truncate max-w-[200px]">
+            {selectedDetail
+              ? `Ficha: ${selectedDetail.official_name}`
+              : `Buscar arterias (${total})`}
+          </span>
+          <span className="text-sky-300 text-[10px] bg-sky-900/80 px-2 py-0.5 rounded-full border border-sky-500/30">
+            Abrir ↑
+          </span>
+        </button>
+      )}
     </div>
   );
 }

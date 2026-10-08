@@ -25,7 +25,7 @@ export default async function StreetDetailPage(props: StreetPageProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-57px)] overflow-hidden">
+    <div className="flex-1 flex flex-col md:flex-row h-full min-h-0 overflow-hidden">
       {/* Columna izquierda: Ficha técnica y botón volver */}
       <div className="md:w-[460px] lg:w-[500px] bg-slate-50 border-r border-slate-200 flex flex-col p-4 overflow-y-auto">
         <div className="mb-3">

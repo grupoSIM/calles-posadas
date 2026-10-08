@@ -95,4 +95,63 @@ Historia de cambios, ejecuciones y comprobaciones de `FEAT-005`. El estado vigen
 - **Hallazgos:** Ninguno.
 - **Dictamen:** FAVORABLE. AC-001 a AC-005 plenamente verificados. Conforme para cierre definitivo.
 
+### ERR-003: Desbordamiento horizontal en cabecera móvil y colapso irrecuperable del panel de búsqueda en viewport móvil
+- **Origen y fecha:** Reporte de usuario (2026-10-07) con captura de pantalla en dispositivo móvil Android (`posadas.ferchamorro.cloud`).
+- **AC afectado:** AC-001 (Cabecera institucional y responsiva), AC-003 (Bottom Sheet móvil ergonómico de 3 estados).
+- **Síntoma y reproducción:**
+  1. En pantallas móviles angostas (≤ 390px), la cabecera mostraba todos los enlaces institucionales (`Explorador`, `Métricas`, `IDE Posadas`, `Digesto`) en una sola línea no envuelta, sumando un ancho intrínseco > 620px que forzaba desbordamiento horizontal en la raíz del documento. Al tocar o deslizar la pantalla, la vista se desplazaba horizontalmente hacia la derecha, cortando el logo ("Calles de Posadas" reducido a "de as") y dejando un área blanca a la derecha.
+  2. El contenedor raíz usaba `h-screen` (`100vh`), el cual en navegadores móviles con barra de navegación dinámica se extiende 70-80px por debajo del área visible. Al deslizar o colapsar el drawer inferior, éste quedaba oculto completamente fuera de pantalla (offscreen) sin ningún botón o tirador accesible para reabrirlo o buscar ("la parte de búsqueda desaparece y no se puede recuperar").
+  3. La caja de "Referencias" del mapa en `StreetViewer.tsx` se ubicaba en la esquina inferior derecha colisionando con el panel táctil móvil.
+- **Esperado:**
+  1. Cabecera 100% responsiva sin desbordamiento horizontal en anchos estrechos (≤ 390px), con botón de acceso a Métricas y menú desplegable para accesos externos (IDE Posadas, Digesto).
+  2. El layout utiliza unidades dinámicas de viewport (`h-dvh` / `max-h-dvh`) y safe-area insets (`pb-[env(safe-area-inset-bottom)]`).
+  3. En modo colapsado (`peek`), el campo de búsqueda (`SearchBar`) permanece visible y al enfocarlo se auto-expande a `half`.
+  4. Si el panel se oculta (`hidden`) para explorar el mapa completo, se muestra un botón flotante persistente `🔍 Buscar arterias` en la esquina inferior para recuperarlo con un solo toque.
+  5. La leyenda de Referencias se oculta en mobile (`hidden md:flex`) previniendo solapamientos.
+- **Cambio correctivo:**
+  - `src/components/layout/Header.tsx`: componente de cabecera responsivo con menú desplegable accesible.
+  - `src/app/layout.tsx`: integración de `Header`, `h-dvh` en `html` y `body`, `overflow-x-hidden`.
+  - `src/components/search/SearchBar.tsx`: soporte de prop `onFocus`.
+  - `src/app/page.tsx`: soporte de estados `hidden`, `peek`, `half`, `full`, auto-expansión al foco, botones compactos y botón flotante de recuperación.
+  - `src/components/map/StreetViewer.tsx`: leyenda de Referencias oculta en pantallas pequeñas (`hidden md:flex`).
+  - `test/frontend-integration.test.ts`: test de integración para contratos de Header, SearchBar y HomePage.
+- **Comprobación:**
+  - `npm test`: 57 tests pasados en 29 suites (0 fallos).
+  - `npm run build`: compilación de producción exitosa en Turbopack (exit code 0).
+  - Comprobación visual y métrica en Chrome con emulación móvil real (viewport 390x844):
+    - Detección de desbordamiento horizontal: `docW === 390`, `bodyW === 390`, `overflowing: []` (0 elementos fuera de pantalla).
+    - Capturas generadas en `specs/feat-005/artifacts/`:
+      - [ERR-003-mobile-emulado-390px.png](artifacts/ERR-003-mobile-emulado-390px.png): Vista inicial en `half` con cabecera adaptada, menú, mapa y catálogo de arterias visibles sin scroll horizontal.
+      - [ERR-003-mobile-01-peek.png](artifacts/ERR-003-mobile-01-peek.png): Estado colapsado `peek`, mapa amplio y barra de búsqueda visible y enfocable al pie.
+      - [ERR-003-mobile-02-hidden.png](artifacts/ERR-003-mobile-02-hidden.png): Estado `hidden` con 100% mapa y botón flotante `🔍 Buscar arterias (874) [ Abrir ↑ ]`.
+      - [ERR-003-mobile-03-recuperado.png](artifacts/ERR-003-mobile-03-recuperado.png): Estado recuperado tras pulsar el botón flotante.
+      - [ERR-003-mobile-04-menu.png](artifacts/ERR-003-mobile-04-menu.png): Menú de navegación móvil desplegado con accesos limpios.
+      - [ERR-003-mobile-05-urban-center.png](artifacts/ERR-003-mobile-05-urban-center.png): Carga inicial en modo `peek` (125px) con centro cartográfico en el centroide urbano de Posadas (-27.382°, -55.902°), mostrando la cuadrícula de avenidas y barrios en lugar del río.
+
+### <a id="t-010"></a>T-010: Cabecera móvil responsiva y persistencia del panel de búsqueda móvil (Developer)
+- **Fecha y rol:** 2026-10-07, Developer (Autocontrol).
+- **Archivos modificados:** `src/components/layout/Header.tsx`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/components/search/SearchBar.tsx`, `src/components/map/StreetViewer.tsx`, `src/app/calles/[slug]/page.tsx`, `test/frontend-integration.test.ts`.
+- **Salida empírica:** 57 tests pasados, build exitoso y 5 capturas en viewport móvil sin desbordamientos.
+- **Estado:** Cumplida. Pasa a revisión independiente.
+
+### <a id="revisión-independiente-err-003"></a>Revisión independiente de ERR-003
+- **Fecha y rol:** 2026-10-07, Verifier independiente (`b827af84-cf2f-49b0-bfbd-c3482b88dcb4`).
+- **Material inspeccionado:**
+  - Contrato en `specs/feat-005/spec.md` (AC-001, AC-003 y AC-005).
+  - Diff en `src/components/layout/Header.tsx`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/components/search/SearchBar.tsx`, `src/components/map/StreetViewer.tsx`, `src/app/calles/[slug]/page.tsx`, `test/frontend-integration.test.ts`.
+  - Artefactos visuales reales en `specs/feat-005/artifacts/`:
+    - `ERR-003-mobile-emulado-390px.png` (viewport móvil 390px, cabecera intacta, catálogo visible, sin scroll horizontal).
+    - `ERR-003-mobile-01-peek.png` (estado colapsado peek 125px con barra de búsqueda accesible).
+    - `ERR-003-mobile-02-hidden.png` (estado hidden con botón flotante persistente `🔍 Buscar arterias`).
+    - `ERR-003-mobile-03-recuperado.png` (re-expansión instantánea a half tras pulsar botón flotante).
+    - `ERR-003-mobile-04-menu.png` (menú de navegación móvil desplegado).
+- **Comprobaciones ejecutadas personalmente y resultados:**
+  1. Inspección visual directa de capturas: ausencia total de desbordamiento horizontal (`docW === 390`, `bodyW === 390`, `overflowing: []`), recuperación garantizada del panel de búsqueda y menú responsive funcional.
+  2. `npm test`: 57 tests pasados en 29 suites (0 fallos, 0 saltados) en 522 ms.
+  3. `npm run build`: compilación limpia en Next.js (Turbopack) con TypeScript estricto en 864 ms y 9 rutas generadas sin errores (exit code 0).
+- **Hallazgos:** Ninguno.
+- **Dictamen:** FAVORABLE. AC-001, AC-003 y AC-005 plenamente verificados. Conforme para cierre definitivo.
+
+
+
 

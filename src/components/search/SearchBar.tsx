@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 interface SearchBarProps {
   value: string;
   onChange: (query: string) => void;
+  onFocus?: () => void;
   placeholder?: string;
   className?: string;
 }
@@ -12,6 +13,7 @@ interface SearchBarProps {
 export default function SearchBar({
   value,
   onChange,
+  onFocus,
   placeholder = 'Buscar por nombre (ej. Jujuy, Areco, San Martín) o número (ej. 115, 49)...',
   className = '',
 }: SearchBarProps) {
@@ -40,6 +42,7 @@ export default function SearchBar({
         type="text"
         value={internalValue}
         onChange={(e) => setInternalValue(e.target.value)}
+        onFocus={onFocus}
         placeholder={placeholder}
         className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-posadas-river focus:border-transparent text-sm shadow-sm transition-all"
       />

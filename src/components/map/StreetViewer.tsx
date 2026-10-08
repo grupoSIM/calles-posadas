@@ -23,7 +23,7 @@ export interface StreetViewerProps {
   className?: string;
 }
 
-const POSADAS_CENTER: [number, number] = [-27.36708, -55.89608];
+const POSADAS_CENTER: [number, number] = [-27.382, -55.902];
 const DEFAULT_ZOOM = 13;
 
 export default function StreetViewer({
@@ -438,13 +438,13 @@ export default function StreetViewer({
       <div className="absolute bottom-3 left-3 z-[1000] hidden md:flex items-center gap-2 bg-slate-900/85 text-slate-200 backdrop-blur-md px-3 py-1.5 rounded-lg text-[11px] font-mono shadow-md border border-slate-700/80">
         <span className="text-posadas-river font-sans font-semibold">Posadas</span>
         <span className="text-slate-400">•</span>
-        <span>-27.367°, -55.896°</span>
+        <span>-27.382°, -55.902°</span>
         <span className="text-slate-400">•</span>
         <span className="text-emerald-400">WGS84</span>
       </div>
 
       {/* Leyenda visual superpuesta (inferior derecha) */}
-      <div className="absolute bottom-3 right-3 z-[1000] bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl shadow-md border border-slate-200/90 text-xs flex flex-col gap-1.5 pointer-events-auto">
+      <div className="absolute bottom-3 right-3 z-[1000] bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl shadow-md border border-slate-200/90 text-xs hidden md:flex flex-col gap-1.5 pointer-events-auto">
         <span className="font-semibold text-slate-800 text-[11px] tracking-wide uppercase">Referencias</span>
         <div className="flex items-center gap-2">
           <span className="w-3.5 h-1 bg-[#0284c7] rounded-full"></span>
