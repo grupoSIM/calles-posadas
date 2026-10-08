@@ -26,3 +26,26 @@
   2. *MVP Enfocado:* Exclusivo en consulta, búsqueda unificada, visor cartográfico con ciclovías, trazabilidad de ordenanzas del Digesto y métricas de completitud.
 - **Resolución:** Se adopta el MVP Enfocado. Todas las funcionalidades de UGC, autenticación y archivo fotográfico georreferenciado ("Posadas del Ayer") quedan formalmente diferidas a fases posteriores.
 - **Autoridad:** Propuesta Leader derivada del PRD, ratificada por el usuario.
+
+## DEC-003: Representación de sentido de circulación, orientación y cobertura por tramos
+
+- **Fecha:** 2026-10-07
+- **Contexto:** En el esquema actual (DEC-001), el sentido de circulación de cada arteria se modela a nivel agregado (`calles.sentido_circulacion`) con valores `'MANO_UNICA' | 'DOBLE' | 'PEATONAL'`. La capa oficial `geonode:manos_unicas` de la IDE Posadas provee orientación cardinal (`SENTIDO: "Norte - Sur"`, `"Oeste - Este"`, etc.) y estado de vigencia (`vigente: "SI"`), pero sólo cubre avenidas troncales específicas. Para arterias sin respaldo oficial confirmado en la capa de la IDE, arterias con sentidos mixtos según el tramo o sentidos no relevados, se requiere evaluar cómo extender el modelo de datos.
+- **Alternativas consideradas:**
+  1. *Conservar modelo actual con asignación estricta por fuente oficial (Opción adoptada en este tramo):*
+     - Mantener el enum `'MANO_UNICA' | 'DOBLE' | 'PEATONAL'`.
+     - Únicamente asignar `'MANO_UNICA'` cuando exista registro oficial vigente (`vigente: 'SI'`) en `manos_unicas` con correspondencia toponímica estricta de identidad.
+     - No inferir mano única mediante heurísticas hardcodeadas ni listas estáticas sin respaldo en el dataset.
+     - Las arterias sin confirmación oficial de mano única se mantienen como `'DOBLE'`.
+     - No altera el esquema relacional ni introduce migraciones de base de datos.
+  2. *Incorporar estado DESCONOCIDO y orientación a nivel arteria:*
+     - Extender `sentido_circulacion` para incluir `'DESCONOCIDO'`.
+     - Añadir columna `orientacion_circulacion TEXT NULL` (ej. `'NORTE_SUR'`, `'SUR_NORTE'`, etc.).
+     - Ventaja: Mayor fidelidad cívica al distinguir arterias relevadas como doble mano de aquellas sin relevar.
+     - Impacto: Requiere migración de esquema DDL, actualización de contratos de API, TypeScript y filtros de frontend.
+  3. *Modelar sentido y orientación granular a nivel tramo (`tramos_calle`):*
+     - Mover `sentido_circulacion` y `orientacion` a la tabla `tramos_calle` para reflejar arterias que cambian de sentido por tramos.
+     - Ventaja: Máxima precisión cartográfica y catastral.
+     - Impacto: Requiere rediseño del pipeline ETL con cruce espacial geométrico tramo a tramo y ajuste de endpoints.
+- **Resolución:** Se adopta la Alternativa 1 para las correcciones operativas vigentes sin alterar el esquema relacional aprobado. Las alternativas 2 y 3 quedan formalmente documentadas para acuerdo previo con el usuario antes de cualquier modificación estructural del modelo.
+- **Autoridad:** Propuesta técnica Leader / Architect.

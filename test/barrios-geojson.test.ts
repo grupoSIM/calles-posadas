@@ -66,11 +66,10 @@ describe('FEAT-008: Capa interactiva de barrios y enriquecimiento vial', () => {
   describe('AC-003: Enriquecimiento de sentidos de circulación y ordenanzas desde IDE', () => {
     test('Avenidas clave con mano única oficial quedan registradas con MANO_UNICA', () => {
       const db = getDatabase();
-      const keyAvenues = [
+      const officialAvenues = [
         'Avenida Francisco de Haro',
         'Avenida General Juan Lavalle',
         'Avenida Santa Catalina',
-        'Avenida Corrientes',
         'Avenida Padre Jose F. Rademacher',
         'Avenida Centenario',
         'Avenida Tambor de Tacuari',
@@ -78,7 +77,7 @@ describe('FEAT-008: Capa interactiva de barrios y enriquecimiento vial', () => {
         'Avenida Blas Parera'
       ];
 
-      for (const avName of keyAvenues) {
+      for (const avName of officialAvenues) {
         const row = db.prepare('SELECT nombre_oficial, sentido_circulacion FROM calles WHERE nombre_oficial = ?').get(avName) as any;
         assert.ok(row, `Debe existir la arteria ${avName} en la base de datos`);
         assert.equal(
@@ -86,6 +85,12 @@ describe('FEAT-008: Capa interactiva de barrios y enriquecimiento vial', () => {
           'MANO_UNICA',
           `La arteria ${avName} debe tener sentido_circulacion = 'MANO_UNICA'`
         );
+      }
+
+      // Comprobación de no-inferencia: Avenida Corrientes no está en la capa oficial de manos_unicas de la IDE, permanece DOBLE
+      const corrientes = db.prepare('SELECT sentido_circulacion FROM calles WHERE nombre_oficial = ?').get('Avenida Corrientes') as any;
+      if (corrientes) {
+        assert.equal(corrientes.sentido_circulacion, 'DOBLE', 'Avenida Corrientes debe ser DOBLE sin fuente oficial en IDE');
       }
     });
 

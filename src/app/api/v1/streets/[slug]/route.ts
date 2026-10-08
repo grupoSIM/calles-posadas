@@ -2,11 +2,10 @@ import { getStreetBySlug } from '@/lib/db/streets';
 
 export async function GET(
   _request: Request,
-  context: { params: { slug: string } | Promise<{ slug: string }> }
+  context: { params: Promise<{ slug: string }> }
 ): Promise<Response> {
   try {
-    const params = await Promise.resolve(context.params);
-    const slug = params?.slug;
+    const { slug } = await context.params;
 
     if (!slug) {
       return Response.json(

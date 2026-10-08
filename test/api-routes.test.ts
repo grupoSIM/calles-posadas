@@ -68,7 +68,7 @@ describe('T-002, T-003, T-004: Handlers HTTP de Catálogo y Búsqueda', () => {
 
       // 2. Consultar detalle
       const req = new Request(`http://localhost:3000/api/v1/streets/${slug}`);
-      const res = await getStreetDetail(req, { params: { slug } });
+      const res = await getStreetDetail(req, { params: Promise.resolve({ slug }) });
       assert.equal(res.status, 200);
 
       const json = await res.json();
@@ -81,7 +81,7 @@ describe('T-002, T-003, T-004: Handlers HTTP de Catálogo y Búsqueda', () => {
 
     test('Retorna 404 Not Found para un slug inexistente', async () => {
       const req = new Request('http://localhost:3000/api/v1/streets/slug-que-no-existe-jamás-999');
-      const res = await getStreetDetail(req, { params: { slug: 'slug-que-no-existe-jamás-999' } });
+      const res = await getStreetDetail(req, { params: Promise.resolve({ slug: 'slug-que-no-existe-jamás-999' }) });
       assert.equal(res.status, 404);
 
       const json = await res.json();

@@ -315,15 +315,35 @@ describe('T-003: Normalización toponímica y procesamiento espacial', () => {
   });
 
   describe('FEAT-008: Enriquecimiento de manos únicas y ordenanzas de barrios', () => {
-    test('isManoUnica identifica correctamente arterias de mano única', async () => {
+    test('ERR-001 (FEAT-008): isManoUnica discrimina vigencia, identidad toponímica y ausencia de fuente', async () => {
       const { isManoUnica } = await import('../scripts/etl/transform.js');
-      assert.equal(isManoUnica('Avenida Corrientes', 'AVENIDA'), true);
-      assert.equal(isManoUnica('Avenida Francisco de Haro', 'AVENIDA'), true);
-      assert.equal(isManoUnica('Avenida Padre Jose F. Rademacher', 'AVENIDA'), true);
-      assert.equal(isManoUnica('Avenida General Juan Lavalle', 'AVENIDA'), true);
-      assert.equal(isManoUnica('Avenida Santa Catalina', 'AVENIDA'), true);
-      assert.equal(isManoUnica('Calle Jujuy', 'CALLE'), false);
-      assert.equal(isManoUnica('Avenida Uruguay', 'AVENIDA'), false);
+      const fs = await import('fs');
+      const manosUnicasOficial = JSON.parse(fs.readFileSync('data/fixtures/manos_unicas.json', 'utf8'));
+
+      // 1. Positivos respaldados oficialmente con vigente = 'SI'
+      assert.equal(isManoUnica('Avenida Francisco de Haro', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida Padre Jose F. Rademacher', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida General Juan Lavalle', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida Santa Catalina', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida Centenario', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida Blas Parera', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida Tambor de Tacuari', 'AVENIDA', manosUnicasOficial), true);
+      assert.equal(isManoUnica('Avenida Lopez y Planes', 'AVENIDA', manosUnicasOficial), true);
+
+      // 2. Registro no vigente (vigente: 'NO') no debe producir mano única
+      const datosNoVigente = JSON.parse(JSON.stringify(manosUnicasOficial));
+      const rademacherFeat = datosNoVigente.features.find((f: any) => f.properties?.NOMB_ === 'AV. RADEMACHER');
+      rademacherFeat.properties.vigente = 'NO';
+      assert.equal(isManoUnica('Avenida Padre Jose F. Rademacher', 'AVENIDA', datosNoVigente), false);
+
+      // 3. Falsa coincidencia por subcadena / homonimia (AV. LAVALLE no debe coincidir con Avenida Lavalleja)
+      assert.equal(isManoUnica('Avenida Lavalleja', 'AVENIDA', manosUnicasOficial), false);
+      assert.equal(isManoUnica('Avenida Uruguay', 'AVENIDA', manosUnicasOficial), false);
+      assert.equal(isManoUnica('Calle Jujuy', 'CALLE', manosUnicasOficial), false);
+
+      // 4. Ausencia de fuente oficial o inferencia sin respaldo
+      assert.equal(isManoUnica('Avenida Francisco de Haro', 'AVENIDA'), false, 'Sin fuente oficial debe dar false');
+      assert.equal(isManoUnica('Avenida Corrientes', 'AVENIDA', manosUnicasOficial), false, 'Corrientes no está en manos_unicas oficial');
     });
 
     test('transformBarrios enriquece ordenanzas normativas desde barriosNormativaData', async () => {

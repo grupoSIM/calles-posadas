@@ -321,48 +321,55 @@ export function transformBarrios(
   });
 }
 
-// Determinar si una arteria es de mano única según la capa oficial de la IDE Posadas o toponimia consolidada
+// Determinar si una arteria es de mano única según la capa oficial de la IDE Posadas
 export function isManoUnica(
   cleanName: string,
   tipoVia: string,
   manosUnicasData?: { features: any[] }
 ): boolean {
-  const normName = stripAccents(cleanName).toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
-
-  // Avenidas de mano única consolidadas históricamente en Posadas (ej. Av. Corrientes)
-  if (normName.includes('corrientes') && tipoVia === 'AVENIDA') {
-    return true;
-  }
-
-  const knownAvenues = [
-    'francisco de haro',
-    'rademacher',
-    'centenario',
-    'blas parera',
-    'tambor de tacuari',
-    'lopez y planes',
-    'lavalle',
-    'santa catalina'
-  ];
-
   if (!manosUnicasData?.features || manosUnicasData.features.length === 0) {
-    if (tipoVia === 'AVENIDA') {
-      return knownAvenues.some(kw => normName.includes(kw));
-    }
     return false;
   }
 
+  const targetTokens = getToponymTokens(cleanName);
+  if (targetTokens.length === 0) return false;
+
   for (const feat of manosUnicasData.features) {
+    // 1. Validar vigencia: sólo registros con vigente === 'SI' son válidos
+    const rawVigente = String(feat.properties?.vigente || '').trim().toUpperCase();
+    if (rawVigente !== 'SI') continue;
+
     const rawNomb = feat.properties?.NOMB_ || '';
     if (!rawNomb) continue;
-    const cleanNomb = stripAccents(rawNomb).toLowerCase().replace(/^(av|avenida|calle)\s+/, '').replace(/[^a-z0-9]/g, ' ').trim();
-    const tokens = cleanNomb.split(/\s+/).filter(w => !TOPONYM_STOPWORDS.has(w));
-    if (tokens.length === 0) continue;
 
-    if (tokens.length === 1 && normName.includes(tokens[0])) {
-      return true;
+    // 2. Verificar tipo de vía si el registro oficial es explícitamente una avenida
+    const officialType = extractRoadType(rawNomb);
+    if (officialType === 'AVENIDA' && tipoVia !== 'AVENIDA') {
+      continue;
     }
-    if (tokens.length > 1 && tokens.every(tok => normName.includes(tok))) {
+
+    const cleanNomb = stripAccents(rawNomb)
+      .toLowerCase()
+      .replace(/^(av\b\.?|avenida|calle|pasaje|pje\b\.?|diagonal|costanera)\s*/i, '')
+      .replace(/[^a-z0-9]/g, ' ')
+      .trim();
+    const nombTokens = cleanNomb.split(/\s+/).filter(w => !TOPONYM_STOPWORDS.has(w));
+    if (nombTokens.length === 0) continue;
+
+    // 3. Coincidencia estricta de identidad:
+    // Todos los tokens sustantivos del registro oficial deben coincidir como tokens completos
+    // (o abreviaturas de diccionario) con los tokens de la arteria destino.
+    // Esto evita falsos positivos por subcadenas (ej. 'lavalle' NO coincide con 'lavalleja')
+    // y evita que iniciales de una letra ('L.') coincidan espuriamente con apellidos ('Lavalle').
+    const allTokensMatch = nombTokens.every(nTok =>
+      targetTokens.some(tTok =>
+        tTok === nTok ||
+        TOPONYM_ABBREVIATIONS.get(nTok) === tTok ||
+        TOPONYM_ABBREVIATIONS.get(tTok) === nTok
+      )
+    );
+
+    if (allTokensMatch) {
       return true;
     }
   }
@@ -374,9 +381,15 @@ export interface DigestoCalleEntry {
   nombre_oficial: string;
   nombre_normalizado: string;
   numero_calle?: number | null;
-  referencia_ordenanza: string;
-  url_ordenanza: string;
+  referencia_ordenanza: string | null;
+  url_ordenanza: string | null;
+  documento_normativo?: string | null;
+  articulo_normativo?: string | null;
+  fecha_consulta?: string | null;
+  procedencia_normativa?: string | null;
+  estado_normativo?: 'CONFIRMADO' | 'PENDIENTE';
   explicacion: string;
+  fuente_biografica?: string;
   categoria_toponimica: string;
 }
 

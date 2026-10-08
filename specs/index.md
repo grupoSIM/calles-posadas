@@ -16,11 +16,11 @@ Catálogo de incrementos de producto derivados del [PRD](../docs/prd.md) para el
 
 ## Trabajo activo y siguiente acción
 
-- **Feature actual:** Ninguna (FEAT-001 a FEAT-009 verificadas con dictamen independiente favorable; errores ERR-001 y ERR-002 subsanados y verificados).
-- **Estado:** Catálogo al día (tramo MVP e incrementos FEAT-008 y FEAT-009 completamente verificados).
+- **Feature actual:** FEAT-008 y FEAT-009 (correcciones ERR-001 verificadas y cerradas favorablemente).
+- **Estado:** Verificadas.
 - **Responsable:** Leader.
 - **Bloqueo:** Ninguno.
-- **Siguiente acción:** Acordar el siguiente incremento del roadmap con el usuario tras la sincronización remota.
+- **Siguiente acción:** Ciclo de correcciones completado; catálogo íntegro verificado. Esperar nuevas instrucciones del usuario.
 
 ## Publicación
 

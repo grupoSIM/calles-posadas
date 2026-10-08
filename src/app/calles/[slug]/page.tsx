@@ -8,17 +8,17 @@ import StreetViewerClient from '@/components/map/StreetViewerClient';
 import { getStreetMetadata } from '@/lib/metadata';
 
 interface StreetPageProps {
-  params: Promise<{ slug: string }> | { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata(props: StreetPageProps) {
-  const params = await Promise.resolve(props.params);
-  return getStreetMetadata(params.slug);
+  const { slug } = await props.params;
+  return getStreetMetadata(slug);
 }
 
 export default async function StreetDetailPage(props: StreetPageProps) {
-  const params = await Promise.resolve(props.params);
-  const street = getStreetBySlug(params.slug);
+  const { slug } = await props.params;
+  const street = getStreetBySlug(slug);
 
   if (!street) {
     notFound();

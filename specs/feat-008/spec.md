@@ -25,25 +25,28 @@
    - Resaltado automático de los polígonos de los barrios asociados a la calle seleccionada.
 3. **Enriquecimiento de datos viales y barrios en ETL (`scripts/etl/`):**
    - Ingesta de `geonode:manos_unicas` y `geonode:Barrios_Posadas1` en `extract.ts`.
-   - Cruce toponímico y espacial para asignar `sentidoCirculacion: 'MANO_UNICA'` a las arterias de mano única vigentes (ej. Av. Francisco de Haro, Av. Lavalle, Av. Santa Catalina, Av. Corrientes, Av. Tambor de Tacuarí, Av. Centenario, Av. López y Planes, Av. Blas Parera).
+   - Cruce toponímico estricto y espacial para asignar `sentidoCirculacion: 'MANO_UNICA'` exclusivamente a arterias con registros oficiales vigentes (`vigente === 'SI'`) en la IDE Posadas (ej. Av. Francisco de Haro, Av. Lavalle, Av. Santa Catalina, Av. Rademacher, Av. Tambor de Tacuarí, Av. Centenario, Av. López y Planes, Av. Blas Parera).
+   - Rechazo de registros no vigentes (`vigente: 'NO'`), prevención de falsas colisiones toponímicas (ej. `AV. LAVALLE` no colisiona con `Avenida Lavalleja`) y eliminación de listas hardcodeadas no respaldadas (Avenida Corrientes se preserva como `DOBLE` al carecer de registro en `manos_unicas`).
    - Incorporación de ordenanzas de barrios oficiales en la tabla `barrios`.
+   - Alternativas de modelado de sentido desconocido, cardinalidad por tramo y orientación documentadas en DEC-003 ([docs/decisions.md](../../docs/decisions.md)).
 4. **Pruebas y validación:**
    - Tests de endpoint `/api/v1/barrios/geojson`.
-   - Tests de sentidos de circulación y persistencia en ETL.
+   - Tests de sentidos de circulación y persistencia en ETL con casos de vigencia, colisión negativa y ausencia de registro oficial.
    - Verificación de compilación (`npm run build`) y tests (`npm test`).
 
 ### Exclusiones
 - Edición comunitaria o carga manual de polígonos de barrios (solo fuentes oficiales IDE Posadas).
 - Enriquecimiento masivo de reseñas históricas y biografías del Digesto (objeto de `FEAT-009`).
+- Modelado de tramos bidireccionales mixtos por segmentos o azimut cardinal (documentado como decisión arquitectónica DEC-003 para evaluación posterior).
 
 ## Comportamiento y aceptación
 
 - **AC-001 (Endpoint GeoJSON de Barrios):** La llamada a `GET /api/v1/barrios/geojson` devuelve código 200 y un GeoJSON válido `FeatureCollection` con las geometrías poligonales de los barrios de Posadas y sus propiedades.
   - *Comprobación:* Petición HTTP / test de integración en `test/barrios-geojson.test.ts`. Validar tipo `FeatureCollection`, `features.length > 0` y estructura de propiedades.
 - **AC-002 (Capa vectorial y conmutador HUD de Barrios en el mapa):** El componente `StreetViewer` incluye un control HUD para alternar la visibilidad de los polígonos de barrios, mostrando tooltip con el nombre del barrio al posar el cursor y popup al hacer clic.
-  - *Comprobación:* Inspección visual de la UI en navegador y verificación en componente Leaflet. Captura en `specs/feat-008/artifacts/AC-002-capa-barrios.png`.
-- **AC-003 (Enriquecimiento de sentidos de circulación desde IDE):** Las avenidas clave con mano única oficial según la IDE Posadas (ej. Francisco de Haro, Lavalle, Santa Catalina, Corrientes) quedan registradas en la base de datos con `sentido_circulacion = 'MANO_UNICA'`.
-  - *Comprobación:* Consulta SQL en `calles` verificando que las avenidas de manos únicas tengan `sentido_circulacion = 'MANO_UNICA'`.
+  - *Comprobación:* Inspección visual de la UI en navegador real. Secuencia de capturas de interacción en `specs/feat-008/artifacts/` (activación, hover, clic, resaltado contextual y desactivación).
+- **AC-003 (Enriquecimiento de sentidos de circulación desde IDE):** Las avenidas con mano única oficial vigente según la IDE Posadas (Francisco de Haro, Rademacher, Lavalle, Santa Catalina, Centenario, Tambor de Tacuarí, López y Planes, Blas Parera) quedan registradas con `sentido_circulacion = 'MANO_UNICA'`. Registros con `vigente: NO` son descartados, arterias no registradas (ej. Corrientes) preservan `DOBLE`, y no se producen colisiones homónimas parciales (ej. Lavalleja preserva `DOBLE`).
+  - *Comprobación:* Test unitario en `test/transform.test.ts` (suite ERR-001) y verificación de `calles.db` en `test/barrios-geojson.test.ts`.
 - **AC-004 (Integridad técnica y suite de pruebas):** Ejecución limpia de `npm test`, `npm run test:data` y `npm run build` sin errores.
   - *Comprobación:* Ejecución en entorno local con exit code 0.
 

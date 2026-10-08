@@ -21,18 +21,30 @@ describe('FEAT-009: Vinculación normativa del Digesto Jurídico Municipal y mem
         FROM calles
       `).get() as { total: number; con_ordenanza: number; con_url_valida: number };
 
-      assert.ok(stats.con_ordenanza >= 30, `Debe haber al menos 30 arterias con ordenanza (obtenido: ${stats.con_ordenanza})`);
+      assert.ok(stats.con_ordenanza >= 15, `Debe haber al menos 15 arterias con ordenanza confirmada (obtenido: ${stats.con_ordenanza})`);
       assert.equal(stats.con_ordenanza, stats.con_url_valida, 'Toda ordenanza vinculada debe tener URL válida al Digesto');
 
-      // Comprobar arterias emblemáticas específicas
+      // Comprobación de asociación corregida: Av. Lucas Braulio Areco corresponde a Ordenanza XVIII - N° 4, Art. 10
       const areco = db.prepare('SELECT referencia_ordenanza, url_ordenanza FROM calles WHERE slug = ?').get('avenida-lucas-braulio-areco-115') as any;
       assert.ok(areco, 'Avenida Lucas Braulio Areco debe existir en el catálogo');
-      assert.equal(areco.referencia_ordenanza, 'Ordenanza XVIII - N° 46');
-      assert.ok(areco.url_ordenanza.startsWith('https://digesto.hcdposadas.gob.ar/'));
+      assert.equal(areco.referencia_ordenanza, 'Ordenanza XVIII - N° 4, Art. 10');
+      assert.equal(areco.url_ordenanza, 'https://digesto.hcdposadas.gob.ar/uploads/textos_definitivos_normas/XVIII%20-%204.pdf');
 
-      const corrientes = db.prepare('SELECT referencia_ordenanza, url_ordenanza FROM calles WHERE slug = ?').get('avenida-corrientes-51') as any;
+      // Comprobación de otras asociaciones confirmadas (Zapiola Art. 9, Favaloro XVIII-46 Art. 12)
+      const zapiola = db.prepare('SELECT referencia_ordenanza, url_ordenanza FROM calles WHERE slug = ?').get('avenida-brigadier-general-jose-matias-zapiola-107') as any;
+      assert.ok(zapiola, 'Avenida Zapiola debe existir');
+      assert.equal(zapiola.referencia_ordenanza, 'Ordenanza XVIII - N° 4, Art. 9');
+
+      const favaloro = db.prepare('SELECT referencia_ordenanza, url_ordenanza FROM calles WHERE slug = ?').get('calle-renee-favaloro-138') as any;
+      assert.ok(favaloro, 'Calle Favaloro debe existir');
+      assert.equal(favaloro.referencia_ordenanza, 'Ordenanza XVIII - N° 46, Art. 12');
+
+      // Comprobación negativa: Avenida Corrientes no tiene ordenanza formal confirmada en el lote, queda en null (no supuesta)
+      const corrientes = db.prepare('SELECT referencia_ordenanza, url_ordenanza, explicacion FROM calles WHERE slug = ?').get('avenida-corrientes-51') as any;
       assert.ok(corrientes, 'Avenida Corrientes debe existir');
-      assert.equal(corrientes.referencia_ordenanza, 'Ordenanza XVIII - N° 46');
+      assert.equal(corrientes.referencia_ordenanza, null, 'No debe asignarse ordenanza sin respaldo comprobado');
+      assert.equal(corrientes.url_ordenanza, null, 'No debe asignarse URL sin respaldo comprobado');
+      assert.ok(corrientes.explicacion, 'Conserva su explicación toponímica diferenciada');
     });
   });
 
@@ -107,8 +119,16 @@ describe('FEAT-009: Vinculación normativa del Digesto Jurídico Municipal y mem
       assert.equal(street.toponym_category, 'CIENCIA_CULTURA');
       assert.ok(street.explanation && street.explanation.includes('Misionerita'));
       assert.ok(street.ordinance);
-      assert.equal(street.ordinance.reference, 'Ordenanza XVIII - N° 46');
-      assert.equal(street.ordinance.url, 'https://digesto.hcdposadas.gob.ar/ver_ordenanza/774');
+      assert.equal(street.ordinance.reference, 'Ordenanza XVIII - N° 4, Art. 10');
+      assert.equal(street.ordinance.url, 'https://digesto.hcdposadas.gob.ar/uploads/textos_definitivos_normas/XVIII%20-%204.pdf');
+    });
+
+    test('Arteria con reseña biográfica pero ordenanza no confirmada devuelve ordinance null', () => {
+      const street = getStreetBySlug('avenida-corrientes-51');
+      assert.ok(street, 'Debe devolver Avenida Corrientes');
+      assert.equal(street.toponym_category, 'GEOGRAFIA');
+      assert.ok(street.explanation && street.explanation.length > 20);
+      assert.equal(street.ordinance, null, 'Ordinance debe ser null para ordenanza pendiente no confirmada');
     });
 
     test('Arteria sin ordenanza devuelve toponym_category OTRO y ordinance null', () => {
@@ -124,7 +144,7 @@ describe('FEAT-009: Vinculación normativa del Digesto Jurídico Municipal y mem
     test('getStatsMetrics refleja incremento positivo en ordenanza, explicación y categorías', () => {
       const stats = getStatsMetrics();
 
-      assert.ok(stats.calles.con_ordenanza >= 30, 'con_ordenanza debe ser >= 30');
+      assert.ok(stats.calles.con_ordenanza >= 15, 'con_ordenanza debe ser >= 15');
       assert.ok(stats.calles.porcentaje_ordenanza > 0, 'porcentaje_ordenanza debe ser > 0%');
 
       assert.ok(stats.calles.con_explicacion >= 30, 'con_explicacion debe ser >= 30');
