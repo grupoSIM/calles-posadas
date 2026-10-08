@@ -26,6 +26,14 @@ body {
   background-color: #e2e8f0;
 }
 
+/* Evitar contorno rectangular por defecto del navegador en vectores interactivos de Leaflet (ERR-002) */
+.leaflet-container path.leaflet-interactive:focus,
+.leaflet-container path.leaflet-interactive:focus-visible,
+.leaflet-container svg:focus,
+.leaflet-container svg:focus-visible {
+  outline: none !important;
+}
+
 /* Ocultar scrollbars sin perder funcionalidad */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

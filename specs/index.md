@@ -16,11 +16,11 @@ Catálogo de incrementos de producto derivados del [PRD](../docs/prd.md) para el
 
 ## Trabajo activo y siguiente acción
 
-- **Feature actual:** FEAT-005 (corrección ERR-003 verificada favorablemente por revisor independiente).
+- **Feature actual:** FEAT-008 (corrección ERR-002 verificada favorablemente por revisor independiente).
 - **Estado:** Verificada.
 - **Responsable:** Leader.
 - **Bloqueo:** Ninguno.
-- **Siguiente acción:** Ciclo de corrección móvil cerrado con evidencia visual y tests en verde. Esperar nuevas instrucciones del usuario.
+- **Siguiente acción:** Ciclo de corrección ERR-002 cerrado con evidencia visual y suite de pruebas en verde. Esperar nuevas instrucciones del usuario.
 
 ## Publicación
 

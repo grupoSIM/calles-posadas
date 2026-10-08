@@ -9,6 +9,8 @@ Historia de cambios, ejecuciones y comprobaciones de `FEAT-008`. El estado vigen
 - **2026-10-07:** Developer (sesión `4583cdf7-2873-4280-9b44-48454e0b17d2`) — Implementación de T-001 (enriquecimiento ETL), T-002 (endpoint GeoJSON), T-003 (capa interactiva Leaflet) y T-004 (suite de pruebas y build). Autocontrol completado.
 - **2026-10-07:** Verifier independiente (subagente `e33379a2-99ab-4e9e-8cdb-f72e862984c8`) — Primera auditoría de cierre.
 - **2026-10-07 / 2026-10-08:** Leader / Developer (sesión `5b29833f-0ba0-4f51-8514-ff44c9c3bae2`) — Reapertura por detección de ERR-001: corrección de discriminación de vigencia en `manos_unicas`, prevención de colisiones homónimas parciales, eliminación de inferencias hardcodeadas, formulación de DEC-003 para modelado vial futuro, y captura en navegador real de la secuencia completa de interacción de la capa de barrios.
+- **2026-10-08:** Leader / Developer (sesión `2d67e901-11e6-4757-a6e2-97a9c1a58f55`) — Corrección de ERR-002: eliminación de contorno rectangular de foco por defecto del navegador en SVG de Leaflet y sincronización del resaltado vectorial sobre el polígono exacto en apertura/cierre de popup de barrios. Comprobación visual empírica en Chrome real.
+- **2026-10-08:** Verifier independiente (subagente `f986bdf3-4b9b-4785-83ed-ea6cd1f535c6`) — Auditoría de revisión independiente de ERR-002, verificación de diff, pruebas técnicas automatizadas y evidencia visual. Dictamen FAVORABLE y cierre de FEAT-008 como Verificada.
 
 ## Estado de criterios de aceptación
 
@@ -74,8 +76,31 @@ Historia de cambios, ejecuciones y comprobaciones de `FEAT-008`. El estado vigen
   - 56 tests pasados en 29 suites (0 fallos).
 - **Estado de ERR-001:** Corregido y verificado con tests automatizados.
 
+### T-007: Corrección ERR-002 (Foco rectangular del navegador en polígonos de barrios)
+- **Identificador de error:** ERR-002 (FEAT-008).
+- **Origen:** Reporte del usuario con captura de pantalla.
+- **Síntoma / Reproducción:**
+  - Al hacer clic sobre el polígono de un barrio (ej. "Centro"), el navegador aplicaba el estilo por defecto `:focus` sobre el elemento SVG `<path class="leaflet-interactive">`.
+  - Chromium/Edge dibuja el foco rectangular (`outline`) sobre la caja delimitadora ortogonal (`getBBox()`) del elemento SVG, en lugar de amoldarse al polígono geográfico.
+  - Como el casco urbano y las avenidas tienen inclinación y geometría específica, el recuadro negro desbordaba los límites reales del barrio.
+- **Esperado vs Observado:**
+  - *Esperado:* Al hacer clic en un barrio, el área resaltada debe ceñirse exactamente a los límites poligonales reales del barrio, sin recuadros ortogonales negros artificiales del navegador.
+  - *Observado:* Se dibujaba un rectángulo negro con esquinas redondeadas sobre el bounding box del SVG interactivo.
+- **Cambio aplicado:**
+  1. En `src/app/globals.css`: se añadió la regla `.leaflet-container path.leaflet-interactive:focus, .leaflet-container path.leaflet-interactive:focus-visible, .leaflet-container svg:focus, .leaflet-container svg:focus-visible { outline: none !important; }` para anular el contorno rectangular por defecto del navegador en elementos SVG interactivos.
+  2. En `src/components/map/StreetViewer.tsx`: se añadieron escuchadores `popupopen` y `popupclose` sobre la capa vectorial del barrio para que al abrirse el popup se aplique de inmediato un resaltado vectorial cívico (`#0284c7`, trazo continuo weight 2.5, relleno `#38bdf8` con opacidad 0.28) siguiendo estrictamente el trazado poligonal del barrio, restaurando el estilo contextual o base al cerrarse el popup.
+- **Comprobación:**
+  - Captura real en navegador Chrome headless (1280x900) interactuando con la interfaz activa:
+    - Artefacto actualizado: [AC-002-barrios-04-click-popup.png](artifacts/AC-002-barrios-04-click-popup.png).
+    - Artefacto de control ERR: [ERR-002-barrio-click-popup.png](artifacts/ERR-002-barrio-click-popup.png).
+  - Se confirmó empíricamente la total desaparición del rectángulo negro ortogonal y el ajuste milimétrico del resaltado azul cívico a las cuatro avenidas y límites reales del barrio Centro.
+  - `npm test`: 57 tests aprobados en 29 suites (0 fallos).
+  - `npm run build`: Compilación limpia en Next.js (exit code 0).
+- **Estado de ERR-002:** Corregido y validado empíricamente.
+
 ## Revisión independiente y dictamen de cierre
 
+### Primera revisión independiente (ERR-001)
 - **Fecha y rol:** 2026-10-08, Verifier independiente (`6fd10e05-1cfd-49b1-bd96-ab5d12cc4cff`).
 - **Material inspeccionado:**
   - Contrato en [spec.md](spec.md) (AC-001 a AC-004), tareas en [tasks.md](tasks.md), registro en [evidence.md](evidence.md) y [docs/decisions.md](../../docs/decisions.md) (DEC-003).
@@ -95,3 +120,21 @@ Historia de cambios, ejecuciones y comprobaciones de `FEAT-008`. El estado vigen
   5. Inspección visual de la secuencia interactiva completa de la capa de barrios.
 - **Hallazgos:** Ninguno.
 - **Dictamen:** **FAVORABLE**. Criterios AC-001 a AC-004 y corrección ERR-001 plenamente verificados. Cierre formal como **Verificada**.
+
+### Segunda revisión independiente (ERR-002 y cierre definitivo)
+- **Fecha y rol:** 2026-10-08, Verifier independiente (`f986bdf3-4b9b-4785-83ed-ea6cd1f535c6`).
+- **Material inspeccionado:**
+  - Contrato en [spec.md](spec.md) (AC-002), tareas en [tasks.md](tasks.md) (T-007) y registro del reporte ERR-002 en [evidence.md](evidence.md).
+  - Diff de cambios:
+    - `src/app/globals.css`: adición de regla `.leaflet-container path.leaflet-interactive:focus, .leaflet-container path.leaflet-interactive:focus-visible, .leaflet-container svg:focus, .leaflet-container svg:focus-visible { outline: none !important; }`.
+    - `src/components/map/StreetViewer.tsx`: registro reactivo de eventos `popupopen` y `popupclose` sobre `featureLayer` para aplicar resaltado vectorial continuo (`#0284c7`, fill `#38bdf8`) ajustado estrictamente a la geometría poligonal real y restauración del estilo base/contextual al cierre.
+  - Artefactos visuales comparados:
+    - [ERR-002-barrio-click-popup.png](artifacts/ERR-002-barrio-click-popup.png) (control y verificación de la corrección).
+    - [AC-002-barrios-04-click-popup.png](artifacts/AC-002-barrios-04-click-popup.png) (secuencia actualizada).
+- **Comprobaciones ejecutadas personalmente por el revisor:**
+  1. `npm test`: 57 tests aprobados en 29 suites (0 fallos).
+  2. `npm run test:data`: SQLite íntegro, consultas espaciales R*Tree y toponímicas FTS5 en < 10 ms.
+  3. `npm run build`: Compilación limpia en Next.js Turbopack (exit code 0).
+  4. Inspección visual empírica: Verificado que el contorno ortogonal negro nativo del navegador fue completamente erradicado; el polígono del barrio Centro se resalta ciñéndose con precisión matemática a los límites reales de las avenidas limítrofes y la costa del río Paraná.
+- **Hallazgos:** Ninguno.
+- **Dictamen:** **FAVORABLE**. Corrección ERR-002 validada satisfactoriamente con evidencia empírica irrebatible y suite técnica limpia. Cierre definitivo de FEAT-008 como **Verificada**.

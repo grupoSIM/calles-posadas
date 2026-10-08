@@ -313,6 +313,8 @@ export default function StreetViewer({
           const chacra = props.numero_chacra ? `Chacra ${props.numero_chacra}` : null;
           const tipo = props.tipo === 'CHACRA' ? 'Chacra' : props.tipo === 'BARRIO_OFICIAL' ? 'Barrio Oficial' : 'Barrio';
           const ordenanza = props.referencia_ordenanza;
+          const bName = (props.nombre || '').toLowerCase().trim();
+          const isContextual = activeBarriosSet.has(bName);
 
           featureLayer.bindTooltip(
             `<strong>${name}</strong>${chacra ? ` (${chacra})` : ''}`,
@@ -327,6 +329,44 @@ export default function StreetViewer({
             </div>
           `;
           featureLayer.bindPopup(popupHtml);
+
+          // Resaltado reactivo sobre el contorno poligonal real al abrir/cerrar popup (ERR-002)
+          if ('setStyle' in featureLayer && typeof (featureLayer as any).setStyle === 'function') {
+            const pathLayer = featureLayer as import('leaflet').Path;
+            pathLayer.on('popupopen', () => {
+              pathLayer.setStyle({
+                color: '#0284c7', // River Azure destacado
+                weight: 2.5,
+                fillColor: '#38bdf8',
+                fillOpacity: 0.28,
+                dashArray: '',
+              });
+              pathLayer.bringToFront();
+              if (geojsonLayerRef.current) {
+                geojsonLayerRef.current.bringToFront();
+              }
+            });
+
+            pathLayer.on('popupclose', () => {
+              pathLayer.setStyle(
+                isContextual
+                  ? {
+                      color: '#0284c7',
+                      weight: 2.5,
+                      fillColor: '#38bdf8',
+                      fillOpacity: 0.22,
+                      dashArray: '',
+                    }
+                  : {
+                      color: '#64748b',
+                      weight: 1.2,
+                      fillColor: '#94a3b8',
+                      fillOpacity: 0.08,
+                      dashArray: '4, 4',
+                    }
+              );
+            });
+          }
         },
       });
 
