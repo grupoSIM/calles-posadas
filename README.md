@@ -60,17 +60,22 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 
 ---
 
-## 🐳 Despliegue en VPS (Hostinger con Docker)
+## 🐳 Ejecución con Docker
 
-El repositorio incluye compilación automatizada y publicación continua en GitHub Container Registry (`ghcr.io`).
+Podés compilar y ejecutar el contenedor localmente:
 
-Para desplegar en tu VPS con Docker Compose:
 ```bash
-curl -sO https://raw.githubusercontent.com/grupoSIM/calles-posadas/main/docker-compose.yml
-docker compose pull
+# 1. Compilar imagen Docker
+docker build -t calles-posadas .
+
+# 2. Ejecutar contenedor en el puerto 3000
+docker run -d -p 3000:3000 --name calles-posadas calles-posadas
+```
+
+O utilizando Docker Compose con el archivo genérico incluido en el repositorio:
+```bash
 docker compose up -d
 ```
-Consultá la [Guía completa de Despliegue](docs/deployment.md) para configuración con Traefik (`posadas.ferchamorro.cloud`) o Nginx y certificados SSL automáticos.
 
 ---
 
@@ -93,11 +98,10 @@ npm run build
 
 - [Contexto del Producto](docs/project.md)
 - [Decisiones de Arquitectura](docs/decisions.md)
-- [Guía de Despliegue en VPS](docs/deployment.md)
 - [Auditoría de Métricas de Completitud](docs/completitud.md)
 - [Catálogo de Capas de la IDE Posadas](docs/ide-layers.md)
 
-El desarrollo continuo con especificaciones (SDD) y control de versiones asistido por agentes se gestiona en [grupoSIM/calles-posadas-dev](https://github.com/grupoSIM/calles-posadas-dev).
+El diseño y construcción del producto se desarrolló bajo la metodología Spec-Driven Development (SDD), con especificaciones de producto, pruebas empíricas automatizadas y trazabilidad documental.
 
 ---
 
