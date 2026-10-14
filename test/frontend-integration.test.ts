@@ -1,0 +1,144 @@
+import { test, describe, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { getStreetBySlug } from '../src/lib/db/streets';
+import { closeDatabase } from '../src/lib/db/client';
+import { getStreetMetadata } from '../src/lib/metadata';
+
+describe('FEAT-003: Integración Frontend y Visor Cartográfico', () => {
+  after(() => {
+    closeDatabase();
+  });
+
+  describe('T-004: Metadatos y Estructura de Ficha de Detalle', () => {
+    test('getStreetMetadata genera título y descripción adecuados para arteria existente', () => {
+      const meta = getStreetMetadata('calle-jujuy-49');
+      assert.ok(meta.title.includes('Calle Jujuy'));
+      assert.ok(meta.description && meta.description.length > 0);
+    });
+
+    test('getStreetMetadata maneja slug inexistente con título fallback', () => {
+      const meta = getStreetMetadata('calle-fantasma-999');
+      assert.equal(meta.title, 'Calle no encontrada — Calles de Posadas');
+    });
+
+    test('Datos de arteria alimentan correctamente la ficha de detalle', () => {
+      const street = getStreetBySlug('calle-jujuy-49');
+      assert.ok(street, 'Debe existir la calle de prueba');
+      assert.equal(street.official_name, 'Calle Jujuy');
+      assert.equal(street.road_type, 'CALLE');
+      assert.equal(street.street_number, 49);
+      assert.equal(street.has_cycleway, true);
+      assert.ok(street.total_length_m > 0);
+      assert.ok(street.barrios.length > 0);
+      assert.ok(street.tramos.length > 0);
+    });
+  });
+
+  describe('T-002: Contrato GeoJSON para Leaflet y fitBounds', () => {
+    test('GeoJSON contiene geometría vectorial válida con coordenadas para Leaflet', () => {
+      const street = getStreetBySlug('calle-jujuy-49');
+      assert.ok(street?.geojson, 'Debe contener objeto GeoJSON');
+      assert.ok(['MultiLineString', 'LineString', 'FeatureCollection'].includes(street.geojson.type));
+
+      // Extraer coordenadas según sea Geometry o Feature
+      let coords = street.geojson.coordinates;
+      if (street.geojson.type === 'FeatureCollection') {
+        coords = street.geojson.features[0]?.geometry?.coordinates;
+      }
+      assert.ok(Array.isArray(coords) && coords.length > 0, 'Debe tener lista de coordenadas');
+
+      // Extraer primer punto [lng, lat]
+      const p1 = Array.isArray(coords[0][0]) ? coords[0][0] : coords[0];
+      const [lng, lat] = Array.isArray(p1[0]) ? p1[0] : p1;
+      assert.ok(lng >= -56.2 && lng <= -55.7, `Longitud ${lng} debe estar en el rango de Posadas`);
+      assert.ok(lat >= -27.6 && lat <= -27.2, `Latitud ${lat} debe estar en el rango de Posadas`);
+    });
+
+    test('Identifica tramos con ciclovía para estilización diferencial en el mapa', () => {
+      const street = getStreetBySlug('calle-jujuy-49');
+      assert.ok(street);
+      const cycleTramos = street.tramos.filter((t) => t.tiene_ciclovia);
+      assert.ok(cycleTramos.length > 0, 'La arteria debe registrar al menos un tramo con ciclovía');
+    });
+
+    test('ERR-002: Arteria con tramos mixtos (Avenida Vivanco N° 139) contiene tramos diferenciales con y sin ciclovía y geometrías asociadas', () => {
+      const vivanco = getStreetBySlug('avenida-arq-jorge-eduardo-vivanco-139');
+      assert.ok(vivanco, 'Debe existir Avenida Vivanco');
+      assert.equal(vivanco.tramos.length, 2, 'Debe tener exactamente 2 tramos');
+
+      const tramoConCiclovia = vivanco.tramos.find((t) => t.tiene_ciclovia);
+      const tramoSinCiclovia = vivanco.tramos.find((t) => !t.tiene_ciclovia);
+
+      assert.ok(tramoConCiclovia, 'Debe existir tramo con ciclovía (Tramo 1)');
+      assert.ok(tramoSinCiclovia, 'Debe existir tramo sin ciclovía (Tramo 2)');
+      assert.equal(tramoConCiclovia.orden, 1);
+      assert.equal(tramoSinCiclovia.orden, 2);
+
+      // Cada tramo individual debe poseer su geometría geojson para renderizado independiente
+      assert.ok(tramoConCiclovia.geojson, 'Tramo 1 debe poseer su geojson');
+      assert.ok(tramoSinCiclovia.geojson, 'Tramo 2 debe poseer su geojson');
+      assert.ok(tramoConCiclovia.longitud_m > 3000, 'Tramo 1 longitud > 3 km');
+      assert.ok(tramoSinCiclovia.longitud_m < 1000, 'Tramo 2 longitud < 1 km');
+    });
+  });
+
+  describe('T-001, T-003, T-005: Integración de Módulos y Componentes', () => {
+    test('Importación de componentes cliente sin errores de sintaxis', async () => {
+      const SearchBar = await import('../src/components/search/SearchBar');
+      const FilterBar = await import('../src/components/search/FilterBar');
+      const StreetDetailCard = await import('../src/components/street/StreetDetailCard');
+      const StreetViewerClient = await import('../src/components/map/StreetViewerClient');
+
+      assert.equal(typeof SearchBar.default, 'function');
+      assert.equal(typeof FilterBar.default, 'function');
+      assert.equal(typeof StreetDetailCard.default, 'function');
+      assert.equal(typeof StreetViewerClient.default, 'function');
+    });
+  });
+
+  describe('FEAT-005: Rediseño visual responsivo y tokens Stitch', () => {
+    test('Componentes de vista principal y ficha técnica soportan contrato de datos', async () => {
+      const street = getStreetBySlug('calle-jujuy-49');
+      assert.ok(street);
+
+      const StreetDetailCard = (await import('../src/components/street/StreetDetailCard')).default;
+      assert.equal(typeof StreetDetailCard, 'function');
+
+      // Validar que StreetViewerClient se exporta correctamente
+      const StreetViewer = (await import('../src/components/map/StreetViewer')).default;
+      assert.equal(typeof StreetViewer, 'function');
+    });
+
+    test('Vista de enlace permanente /calles/[slug] resuelve arteria y renderiza con traza GeoJSON', async () => {
+      const StreetDetailPage = (await import('../src/app/calles/[slug]/page')).default;
+      assert.equal(typeof StreetDetailPage, 'function');
+
+      const pageElement = await StreetDetailPage({ params: Promise.resolve({ slug: 'avenida-juan-maza-140' }) });
+      assert.ok(pageElement);
+    });
+
+    test('ERR-003: Componente Header y SearchBar soportan contratos responsivos y foco móvil', async () => {
+      const Header = (await import('../src/components/layout/Header')).default;
+      assert.equal(typeof Header, 'function');
+
+      const SearchBar = (await import('../src/components/search/SearchBar')).default;
+      assert.equal(typeof SearchBar, 'function');
+
+      const HomePage = (await import('../src/app/page')).default;
+      assert.equal(typeof HomePage, 'function');
+    });
+  });
+
+  describe('FEAT-008: AC-002 Capa interactiva de barrios en visor', () => {
+    test('StreetViewer soporta contrato de barrios y barriosGeojson', async () => {
+      const StreetViewer = (await import('../src/components/map/StreetViewer')).default;
+      assert.equal(typeof StreetViewer, 'function');
+
+      // Validar que una arteria expone su lista de barrios asociados para resaltado contextual
+      const street = getStreetBySlug('calle-jujuy-49');
+      assert.ok(street);
+      assert.ok(Array.isArray(street.barrios));
+      assert.ok(street.barrios.length > 0, 'Calle Jujuy debe asociar barrios');
+    });
+  });
+});

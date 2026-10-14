@@ -1,0 +1,465 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import SearchBar from '@/components/search/SearchBar';
+import FilterBar, { FilterState } from '@/components/search/FilterBar';
+import StreetDetailCard from '@/components/street/StreetDetailCard';
+import StreetViewerClient from '@/components/map/StreetViewerClient';
+import type { CalleSummary, CalleDetail } from '@/lib/db/streets';
+
+type MobileSheetState = 'hidden' | 'peek' | 'half' | 'full';
+
+export default function HomePage() {
+  const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState<FilterState>({
+    roadType: '',
+    hasCycleway: false,
+    barrioId: '',
+  });
+
+  const [streets, setStreets] = useState<CalleSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<CalleDetail | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [showCorredor, setShowCorredor] = useState(false);
+
+  // Control de bottom sheet móvil con 3 estados
+  const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>('peek');
+
+  // Control de colapso de panel lateral en escritorio (FEAT-013)
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+
+  // Carga de catálogo de calles
+  const fetchStreets = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (query.trim()) params.set('q', query.trim());
+      if (filters.roadType) params.set('road_type', filters.roadType);
+      if (filters.hasCycleway) params.set('has_cycleway', 'true');
+      if (filters.barrioId) params.set('barrio_id', filters.barrioId);
+      params.set('page', page.toString());
+      params.set('limit', '25');
+
+      const res = await fetch(`/api/v1/streets?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStreets(data.data || []);
+        setTotal(data.total || 0);
+      }
+    } catch (err) {
+      console.error('Error al consultar calles:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [query, filters, page]);
+
+  useEffect(() => {
+    fetchStreets();
+  }, [fetchStreets]);
+
+  // Resetear a página 1 cuando cambia búsqueda o filtros
+  const handleQueryChange = (q: string) => {
+    setQuery(q);
+    setPage(1);
+  };
+
+  const handleFiltersChange = (f: FilterState) => {
+    setFilters(f);
+    setPage(1);
+  };
+
+  // Carga del detalle al seleccionar una calle
+  const handleSelectStreet = useCallback(async (slug: string) => {
+    setSelectedSlug(slug);
+    setIsLoadingDetail(true);
+    // En escritorio, reabrir automáticamente el panel si estaba colapsado (FEAT-013 AC-003)
+    setDesktopCollapsed(false);
+    try {
+      const res = await fetch(`/api/v1/streets/${slug}`);
+      if (res.ok) {
+        const data: CalleDetail = await res.json();
+        setSelectedDetail(data);
+        setShowCorredor(false);
+        // En mobile, abrir el drawer a mitad para ver mapa y datos
+        setMobileSheetState('half');
+      }
+    } catch (err) {
+      console.error('Error al cargar detalle de calle:', err);
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  }, []);
+
+  const handleCloseDetail = () => {
+    setSelectedSlug(null);
+    setSelectedDetail(null);
+    setShowCorredor(false);
+  };
+
+  // Filtrado reactivo al seleccionar un barrio desde la tarjeta del mapa (FEAT-025 AC-002)
+  const handleSelectBarrio = useCallback((barrio: { id: number; name: string }) => {
+    setSelectedDetail(null);
+    setSelectedSlug(null);
+    setDesktopCollapsed(false);
+    setMobileSheetState('half');
+    setFilters((prev) => ({
+      ...prev,
+      barrioId: barrio.id.toString(),
+    }));
+    setPage(1);
+  }, []);
+
+  // Inicialización de parámetros de URL para deep-linking (FEAT-013, FEAT-025)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('collapsed') === 'true') {
+        setDesktopCollapsed(true);
+      }
+      const streetParam = params.get('calle');
+      if (streetParam) {
+        handleSelectStreet(streetParam);
+      }
+      const barrioParam = params.get('barrio_id');
+      if (barrioParam) {
+        setFilters((prev) => ({ ...prev, barrioId: barrioParam }));
+      }
+    }
+  }, [handleSelectStreet]);
+
+  // Alternar estados móviles
+  const toggleMobileSheet = () => {
+    setMobileSheetState((prev) => {
+      if (prev === 'peek') return 'half';
+      if (prev === 'half') return 'full';
+      if (prev === 'full') return 'peek';
+      return 'half';
+    });
+  };
+
+  const mobileHeightClass =
+    mobileSheetState === 'hidden'
+      ? 'translate-y-full md:translate-y-0 h-0 md:h-full pointer-events-none md:pointer-events-auto'
+      : mobileSheetState === 'peek'
+      ? 'h-[125px] max-h-[125px]'
+      : mobileSheetState === 'half'
+      ? 'h-[50dvh] max-h-[50dvh]'
+      : 'h-[88dvh] max-h-[88dvh]';
+
+  const desktopPanelClass = desktopCollapsed
+    ? 'md:w-0 md:max-w-0 md:opacity-0 md:border-r-0 md:overflow-hidden md:pointer-events-none'
+    : 'md:w-[420px] lg:w-[450px] md:opacity-100 md:border-r md:border-slate-200/90 md:pointer-events-auto';
+
+  return (
+    <div className="flex-1 flex flex-col md:flex-row w-full h-full min-h-0 overflow-hidden relative">
+      {/* Panel lateral izquierdo (Escritorio) / Bottom Sheet (Mobile) */}
+      <div
+        className={`
+          ${desktopPanelClass} flex-shrink-0 bg-white z-20 flex flex-col
+          transition-all duration-300 ease-in-out
+          fixed md:relative inset-x-0 bottom-0 md:bottom-auto md:h-full
+          ${mobileHeightClass} md:max-h-full
+          shadow-xl md:shadow-none rounded-t-2xl md:rounded-none
+          pb-[env(safe-area-inset-bottom,0px)]
+        `}
+      >
+        {/* Agarradera / Barra de control móvil */}
+        <div className="md:hidden flex flex-col items-center justify-center pt-2 pb-1.5 px-3 bg-slate-50 border-b border-slate-200/80 rounded-t-2xl select-none flex-shrink-0">
+          <div
+            onClick={toggleMobileSheet}
+            className="w-10 h-1.5 bg-slate-300 hover:bg-slate-400 rounded-full mb-1 cursor-pointer"
+            title="Deslizar o alternar panel"
+          />
+          <div className="w-full flex items-center justify-between text-xs gap-1">
+            <span
+              onClick={toggleMobileSheet}
+              className="font-semibold text-slate-700 truncate cursor-pointer flex-1"
+            >
+              {selectedDetail
+                ? `📍 ${selectedDetail.official_name}`
+                : `🔍 Catálogo (${total} arterias)`}
+            </span>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {mobileSheetState === 'peek' ? (
+                <button
+                  type="button"
+                  onClick={() => setMobileSheetState('half')}
+                  className="text-[11px] font-medium text-posadas-riverDark bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200"
+                >
+                  Expandir ↑
+                </button>
+              ) : mobileSheetState === 'half' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheetState('full')}
+                    className="text-[11px] font-medium text-posadas-riverDark bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200"
+                  >
+                    Completo ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheetState('peek')}
+                    className="text-[11px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-full border border-slate-200"
+                  >
+                    Minimizar ↓
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMobileSheetState('half')}
+                  className="text-[11px] font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-full border border-slate-200"
+                >
+                  Reducir ↓
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setMobileSheetState('hidden')}
+                className="text-[11px] text-slate-400 hover:text-slate-700 hover:bg-slate-200/80 p-0.5 px-1.5 rounded"
+                title="Ocultar para ver mapa completo"
+                aria-label="Ocultar panel"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Ficha técnica activa con retención de contexto */}
+        {selectedDetail ? (
+          <div className="flex-1 overflow-hidden flex flex-col bg-slate-50/30">
+            {/* Barra contextual superior para volver al listado */}
+            <div className="px-3.5 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between shadow-xs">
+              <button
+                type="button"
+                onClick={handleCloseDetail}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-posadas-riverDark hover:text-posadas-river transition-colors px-2 py-1 rounded hover:bg-slate-50"
+              >
+                <span>← Volver al catálogo</span>
+                <span className="text-slate-400 font-normal">({total} arterias)</span>
+              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setDesktopCollapsed(true)}
+                  className="hidden md:inline-flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded text-xs transition-colors"
+                  title="Colapsar panel (Escritorio)"
+                  aria-label="Colapsar panel lateral"
+                >
+                  ◀
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCloseDetail}
+                  className="text-slate-400 hover:text-slate-700 text-xs p-1 rounded"
+                  title="Cerrar ficha"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden p-3 flex flex-col">
+              <StreetDetailCard
+                street={selectedDetail}
+                onClose={handleCloseDetail}
+                onSelectStreet={handleSelectStreet}
+                showCorredor={showCorredor}
+                onToggleCorredor={() => setShowCorredor((v) => !v)}
+              />
+            </div>
+          </div>
+        ) : (
+          /* Vista de Catálogo y Búsqueda */
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Cabecera de filtros y búsqueda */}
+            <div className="p-3 border-b border-slate-100 space-y-2 bg-slate-50/60 flex-shrink-0">
+              <div className="flex items-center gap-1.5">
+                <div className="flex-1 min-w-0">
+                  <SearchBar
+                    value={query}
+                    onChange={handleQueryChange}
+                    onFocus={() => {
+                      if (mobileSheetState === 'peek') {
+                        setMobileSheetState('half');
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDesktopCollapsed(true)}
+                  className="hidden md:flex items-center justify-center w-9 h-9 text-slate-400 hover:text-slate-700 hover:bg-slate-100 border border-slate-200/80 rounded-xl transition-colors shadow-2xs flex-shrink-0 bg-white"
+                  title="Colapsar panel (Escritorio)"
+                  aria-label="Colapsar panel lateral"
+                >
+                  ◀
+                </button>
+              </div>
+              <FilterBar filters={filters} onChange={handleFiltersChange} />
+              <div className="flex justify-between items-center text-[11px] text-slate-500 pt-0.5 px-0.5">
+                <span className="font-medium text-slate-600">
+                  {isLoading
+                    ? 'Buscando en nomenclador...'
+                    : `${total} ${total === 1 ? 'arteria encontrada' : 'arterias encontradas'}`}
+                </span>
+                {total > 25 && (
+                  <span className="text-slate-400 font-mono">
+                    Pág. {page} / {Math.ceil(total / 25)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Listado de resultados scrolleable */}
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1">
+              {isLoading && streets.length === 0 ? (
+                <div className="py-16 text-center text-slate-400 text-xs">
+                  Cargando catálogo municipal...
+                </div>
+              ) : streets.length === 0 ? (
+                <div className="py-16 text-center text-slate-400 text-xs px-4">
+                  No se encontraron arterias con los filtros seleccionados.
+                </div>
+              ) : (
+                streets.map((s) => (
+                  <div
+                    key={s.id}
+                    onClick={() => handleSelectStreet(s.slug)}
+                    className={`p-2.5 rounded-lg cursor-pointer transition-all border group ${
+                      selectedSlug === s.slug
+                        ? 'bg-sky-50/90 border-posadas-river border-l-4 shadow-xs'
+                        : 'bg-white border-slate-100 hover:border-slate-300 hover:bg-slate-50/70 border-l-2 border-l-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-1.5 py-0.5 rounded">
+                          {s.road_type}
+                        </span>
+                        {s.street_number && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-posadas-riverDark border border-posadas-river/20">
+                            N° {s.street_number}
+                          </span>
+                        )}
+                      </div>
+                      {s.has_cycleway && (
+                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                          <span>🚲</span> Ciclovía
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-slate-900 text-sm leading-snug group-hover:text-posadas-riverDark transition-colors">
+                        {s.official_name}
+                      </h3>
+                      <span className="text-slate-300 group-hover:text-posadas-river group-hover:translate-x-0.5 transition-all text-xs">
+                        →
+                      </span>
+                    </div>
+
+                    {s.barrios && s.barrios.length > 0 && (
+                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-1">
+                        {s.barrios.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Paginador */}
+            {total > 25 && (
+              <div className="p-2.5 border-t border-slate-100 flex justify-between items-center text-xs bg-slate-50/80">
+                <button
+                  type="button"
+                  disabled={page <= 1 || isLoading}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 font-medium shadow-xs text-xs"
+                >
+                  ← Anterior
+                </button>
+                <span className="text-slate-600 font-mono text-[11px]">
+                  {page} / {Math.ceil(total / 25)}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= Math.ceil(total / 25) || isLoading}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 font-medium shadow-xs text-xs"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Visor cartográfico en área principal (100% viewport) */}
+      <div className="flex-1 h-full relative z-10 min-w-0">
+        <div className="absolute inset-0 w-full h-full">
+          <StreetViewerClient
+            geojson={selectedDetail?.geojson}
+            activeStreetName={selectedDetail?.official_name}
+            hasCycleway={selectedDetail?.has_cycleway}
+            cyclewayType={selectedDetail?.cycleway_type}
+            tramos={selectedDetail?.tramos}
+            barrios={selectedDetail?.barrios}
+            ejeVial={selectedDetail?.eje_vial}
+            showCorredor={showCorredor}
+            onToggleCorredor={() => setShowCorredor((v) => !v)}
+            onSelectStreet={handleSelectStreet}
+            onSelectBarrio={handleSelectBarrio}
+            className="w-full h-full"
+          />
+        </div>
+
+        {/* Botón flotante para restaurar panel en escritorio cuando está colapsado (FEAT-013 AC-002) */}
+        {desktopCollapsed && (
+          <button
+            type="button"
+            onClick={() => setDesktopCollapsed(false)}
+            className="hidden md:inline-flex items-center gap-2 absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-md text-slate-700 hover:text-posadas-riverDark hover:bg-white px-3.5 py-2 rounded-xl shadow-md border border-slate-200/90 text-xs font-semibold transition-all active:scale-95 group animate-in fade-in duration-200 cursor-pointer pointer-events-auto"
+            title="Expandir panel lateral"
+            aria-label="Expandir panel lateral"
+          >
+            <span className="text-posadas-river font-bold group-hover:translate-x-0.5 transition-transform">▶</span>
+            <span>
+              {selectedDetail
+                ? `📍 ${selectedDetail.official_name}`
+                : `🔍 Catálogo (${total} arterias)`}
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* Botón flotante móvil para recuperar búsqueda si el drawer está oculto */}
+      {mobileSheetState === 'hidden' && (
+        <button
+          type="button"
+          onClick={() => setMobileSheetState('half')}
+          className="md:hidden fixed bottom-5 left-4 z-30 inline-flex items-center gap-2 bg-posadas-midnight text-white px-4 py-2.5 rounded-full shadow-xl border border-slate-700/80 text-xs font-semibold hover:bg-slate-800 transition-all active:scale-95 animate-in fade-in duration-200"
+        >
+          <span>🔍</span>
+          <span className="truncate max-w-[200px]">
+            {selectedDetail
+              ? `Ficha: ${selectedDetail.official_name}`
+              : `Buscar arterias (${total})`}
+          </span>
+          <span className="text-sky-300 text-[10px] bg-sky-900/80 px-2 py-0.5 rounded-full border border-sky-500/30">
+            Abrir ↑
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
